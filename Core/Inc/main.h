@@ -81,6 +81,8 @@ void Error_Handler(void);
 #define FAN_2_GPIO_Port GPIOB
 #define AIR_CTRL_Pin GPIO_PIN_11
 #define AIR_CTRL_GPIO_Port GPIOF
+#define TSAL_Pin GPIO_PIN_7
+#define TSAL_GPIO_Port GPIOE
 #define FAN_3_Pin GPIO_PIN_14
 #define FAN_3_GPIO_Port GPIOD
 #define FAN_4_Pin GPIO_PIN_15
