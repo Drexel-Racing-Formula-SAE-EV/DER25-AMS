@@ -42,13 +42,12 @@ void app_create()
 
 	board_init(&app.board);
 	accumulator_init(&app.acc,
-					 &app.board.stm32f407g.hspi1,
-					 &app.board.stm32f407g.hspi3,
-					 STRINGA_CS_GPIO_Port,
-					 STRINGB_CS_GPIO_Port,
-					 STRINGA_CS_Pin,
-					 STRINGB_CS_Pin
-					);
+					 &app.board.stm32f767z.hspi1,
+					 &app.board.stm32f767z.hspi3,
+					 CS_A_GPIO_Port,
+					 CS_B_GPIO_Port,
+					 CS_A_Pin,
+					 CS_B_Pin);
 
 	HAL_UART_Receive_IT(app.board.cli.huart, &app.board.cli.c, 1);
 
@@ -65,5 +64,5 @@ void app_create()
 
 void set_bms(bool state)
 {
-	HAL_GPIO_WritePin(BMS_SAFETY_OUT_GPIO_Port, BMS_SAFETY_OUT_Pin, state);
+	HAL_GPIO_WritePin(BMS_OK_GPIO_Port, BMS_OK_Pin, state);
 }

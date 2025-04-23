@@ -22,7 +22,7 @@ extern TIM_HandleTypeDef htim5;
 
 extern UART_HandleTypeDef huart2;
 
-void stm32f407g_init(stm32f407g_t * dev)
+void stm32f767z_init(stm32f767z_t * dev)
 {
 	dev->hadc1 = hadc1;
 	dev->hadc2 = hadc2;
@@ -40,7 +40,7 @@ void stm32f407g_init(stm32f407g_t * dev)
 	dev->huart2 = huart2;
 }
 
-uint16_t stm32f407g_adc_read(ADC_HandleTypeDef *hadc)
+uint16_t stm32f767z_adc_read(ADC_HandleTypeDef *hadc)
 {
 	uint16_t count;
 
@@ -51,7 +51,7 @@ uint16_t stm32f407g_adc_read(ADC_HandleTypeDef *hadc)
 	return count;
 }
 
-HAL_StatusTypeDef stm32f407g_adc_switch_channel(ADC_HandleTypeDef *hadc, uint32_t channel)
+HAL_StatusTypeDef stm32f767z_adc_switch_channel(ADC_HandleTypeDef *hadc, uint32_t channel)
 {
 	ADC_ChannelConfTypeDef sConfig = {0};
 	sConfig.Channel = channel;

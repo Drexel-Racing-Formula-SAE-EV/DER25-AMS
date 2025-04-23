@@ -20,7 +20,7 @@
 
 typedef struct
 {
-	stm32f407g_t stm32f407g;
+	stm32f767z_t stm32f767z;
 	// todo: change actual fan struct org. this is a demo
 	fan_t fans[NFANS];
 	imd_t imd;

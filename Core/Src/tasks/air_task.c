@@ -23,7 +23,7 @@ void air_task_fn(void *argument)
 	for(;;)
 	{
 		entry = osKernelGetTickCount();
-		data->air_state = HAL_GPIO_ReadPin(AIR_CONTROL_MCU_GPIO_Port, AIR_CONTROL_MCU_Pin);
+		data->air_state = HAL_GPIO_ReadPin(AIR_CTRL_GPIO_Port, AIR_CTRL_Pin);
 		osDelayUntil(entry + (1000 / AIR_FREQ));
 	}
 }
