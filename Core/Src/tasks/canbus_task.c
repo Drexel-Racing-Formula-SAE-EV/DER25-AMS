@@ -22,7 +22,7 @@ void canbus_task_fn(void *arg);
 TaskHandle_t canbus_task_start(app_data_t *data)
 {
     TaskHandle_t handle;
-    xTaskCreate(canbus_task_fn, "CANBus Task", 128, (void *)data, 8, &handle);
+    xTaskCreate(canbus_task_fn, "CANBus Task", 128, (void *)data, CAN_PRIO, &handle);
     return handle;
 }
 
