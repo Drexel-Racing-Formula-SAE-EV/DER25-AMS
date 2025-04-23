@@ -20,7 +20,8 @@
 void imd_task_fn(void *argument);
 
 
-TaskHandle_t imd_task_start(app_data_t *data){
+TaskHandle_t imd_task_start(app_data_t *data)
+{
     TaskHandle_t handle;
     // todo: appropriate task priority
     xTaskCreate(imd_task_fn, "imd task", 128, (void *) data, 6, &handle);

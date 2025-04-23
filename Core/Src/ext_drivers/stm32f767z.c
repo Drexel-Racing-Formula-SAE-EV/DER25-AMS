@@ -5,7 +5,7 @@
  *      Author: cole
  */
 
-#include "ext_drivers/stm32f407g.h"
+#include "ext_drivers/stm32f767z.h"
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;

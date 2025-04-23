@@ -9,7 +9,8 @@
 
 void current_task_fn(void *argument);
 
-TaskHandle_t current_task_start(app_data_t *data){
+TaskHandle_t current_task_start(app_data_t *data)
+{
 	TaskHandle_t handle;
 	xTaskCreate(current_task_fn, "current task", 128, (void *)data, 7, &handle);
 	return handle;

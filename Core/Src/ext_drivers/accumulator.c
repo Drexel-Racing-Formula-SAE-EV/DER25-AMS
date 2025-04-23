@@ -14,8 +14,7 @@ void accumulator_init(accumulator_t *dev,
 					  GPIO_TypeDef *cs_port_a,
 					  GPIO_TypeDef *cs_port_b,
 					  uint16_t cs_pin_a,
-					  uint16_t cs_pin_b
-					 )
+					  uint16_t cs_pin_b)
 {
 	dev->total_volt = 0;
 
@@ -53,8 +52,7 @@ void accumulator_init(accumulator_t *dev,
 				 cs_pin_a,
 				 cs_pin_b,
 				 NSEGS,
-				 dev->arr
-				);
+				 dev->arr);
 	wakeup_sleep(ltc);
 	LTC6813_init_cfg(ltc); // to set all zeros
 	LTC6813_init_cfgb(ltc);

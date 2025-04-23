@@ -9,7 +9,7 @@
 #define INC_BOARD_H_
 
 #include "ext_drivers/fans.h"
-#include "ext_drivers/stm32f407g.h"
+#include "ext_drivers/stm32f767z.h"
 #include "ext_drivers/imd.h"
 #include "ext_drivers/cli.h"
 #include "ext_drivers/canbus.h"
