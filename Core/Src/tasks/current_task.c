@@ -26,10 +26,10 @@ void current_task_fn(void *argument)
 	{
 		entry = osKernelGetTickCount();
 
-		stm32f407g_adc_switch_channel(current_sensor->hadc_high, current_sensor->channel_high);
-		current_sensor->count_high = stm32f407g_adc_read(current_sensor->hadc_high);
-		stm32f407g_adc_switch_channel(current_sensor->hadc_low, current_sensor->channel_low);
-		current_sensor->count_low  = stm32f407g_adc_read(current_sensor->hadc_low);
+		stm32f767z_adc_switch_channel(current_sensor->hadc_high, current_sensor->channel_high);
+		current_sensor->count_high = stm32f767z_adc_read(current_sensor->hadc_high);
+		stm32f767z_adc_switch_channel(current_sensor->hadc_low, current_sensor->channel_low);
+		current_sensor->count_low  = stm32f767z_adc_read(current_sensor->hadc_low);
 
 		current_sensor_convert(current_sensor);
 

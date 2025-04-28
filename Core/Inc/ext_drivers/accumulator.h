@@ -9,7 +9,7 @@
 #define INC_EXT_DRIVERS_ACCUMULATOR_H_
 
 #include <stdbool.h>
-#include "ext_drivers/LTC6813.h"
+#include "stm32f7xx_hal.h"
 
 #define NSEGS 1
 #define NCELLS 14
@@ -24,9 +24,6 @@ typedef struct
 	float max_temp;
 	float max_volt;
 	float min_volt;
-	ltc6813_driver_t ltc;
-	cell_asic arr[NSEGS];
-	ltc681x_conf_t cfg;
 } accumulator_t;
 
 void accumulator_init(accumulator_t *dev,

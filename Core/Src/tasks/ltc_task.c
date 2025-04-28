@@ -6,7 +6,7 @@
  */
 
 #include "tasks/ltc_task.h"
-#include "ext_drivers/LTC6813.h"
+//#include "ext_drivers/LTC6813.h"
 
 void ltc_task_fn(void *argument);
 
@@ -26,12 +26,6 @@ void ltc_task_fn(void *argument)
 	for(;;)
 	{
         entry = osKernelGetTickCount();
-        accumulator_read_volt(acc);
-        data->total_voltage = acc->total_volt;
-        data->max_voltage = acc->max_volt;
-        data->min_voltage = acc->min_volt;
-        accumulator_read_temp(acc);
-        data->max_temp = acc->max_temp;
         osDelayUntil(entry + (1000 / LTC_FREQ));
 	}
 }
