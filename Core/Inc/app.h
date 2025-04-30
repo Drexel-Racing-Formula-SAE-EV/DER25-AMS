@@ -26,7 +26,7 @@
 #define FAN_FREQ 5
 #define CAN_FREQ 2
 
-/* prios taken from DER24 defaults */
+// prios taken from DER24 defaults
 #define AIR_PRIO  7
 #define CAN_PRIO  8
 #define CLI_PRIO 14

@@ -5,7 +5,8 @@
  *      Author: cole
  */
 
-#include "board.h"
+#include "board.c"
+
 #include "main.h"
 
 #define FAN_MAX 3360
