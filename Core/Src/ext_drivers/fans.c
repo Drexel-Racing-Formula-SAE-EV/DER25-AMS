@@ -13,6 +13,8 @@ int fan_init(fan_t *fan, TIM_TypeDef *timer, TIM_HandleTypeDef *htim, uint64_t m
 	fan->max_timer_val = max_timer_val;
 	fan->CCR = CCR;
 
+	uint32_t ch = TIM_CHANNEL_1;
+
 	HAL_TIM_PWM_Start(htim, (channel - 1) * 4);
 	set_fan_percent(fan, 0.0);
 
