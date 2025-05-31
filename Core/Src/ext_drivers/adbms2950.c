@@ -36,81 +36,11 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	dev->string = STRING_A;
 	adbms2950_set_cs(dev, 1);
 
-	// Set device registers to default
-	for(uint8_t i = 0; i < dev->num_ics; i++)
-	{
-	    //CFGA
-	    dev->ics[i].tx_cfga.gpo1c = PULLED_UP_TRISTATED;
-	    dev->ics[i].tx_cfga.gpo2c = PULLED_UP_TRISTATED;
-	    dev->ics[i].tx_cfga.gpo3c = PULLED_UP_TRISTATED;
-	    dev->ics[i].tx_cfga.gpo4c = PULLED_UP_TRISTATED;
-	    dev->ics[i].tx_cfga.gpo5c = PULLED_UP_TRISTATED;
-	    dev->ics[i].tx_cfga.gpo6c = PULLED_UP_TRISTATED;
+	adbms2950_reset_cfg_regs(dev);
 
-	    dev->ics[i].tx_cfga.gpo1od = OPEN_DRAIN;
-	    dev->ics[i].tx_cfga.gpo2od = OPEN_DRAIN;
-	    dev->ics[i].tx_cfga.gpo3od = OPEN_DRAIN;
-	    dev->ics[i].tx_cfga.gpo4od = OPEN_DRAIN;
-	    dev->ics[i].tx_cfga.gpo5od = OPEN_DRAIN;
-	    dev->ics[i].tx_cfga.gpo6od = OPEN_DRAIN;
-
-	    dev->ics[i].tx_cfga.vs1  = VSM_SGND;
-	    dev->ics[i].tx_cfga.vs2  = VSM_SGND;
-	    dev->ics[i].tx_cfga.vs3  = VSMV_SGND;
-	    dev->ics[i].tx_cfga.vs4  = VSMV_SGND;
-	    dev->ics[i].tx_cfga.vs5  = VSMV_SGND;
-	    dev->ics[i].tx_cfga.vs6  = VSMV_SGND;
-	    dev->ics[i].tx_cfga.vs7  = VSMV_SGND;
-	    dev->ics[i].tx_cfga.vs8  = VSMV_SGND;
-	    dev->ics[i].tx_cfga.vs9  = VSMV_SGND;
-	    dev->ics[i].tx_cfga.vs10 = VSMV_SGND;
-
-	    dev->ics[i].tx_cfga.injosc = INJOSC0_NORMAL;
-	    dev->ics[i].tx_cfga.injmon = INJMON0_NORMAL;
-	    dev->ics[i].tx_cfga.injts  = NO_THSD;
-	    dev->ics[i].tx_cfga.injecc = NO_ECC;
-	    dev->ics[i].tx_cfga.injtm  = NO_TMODE;
-
-	    dev->ics[i].tx_cfga.soak    = SOAK_DISABLE;
-	    dev->ics[i].tx_cfga.ocen    = OC_DISABLE;
-	    dev->ics[i].tx_cfga.gpio1fe = FAULT_STATUS_DISABLE;
-	    dev->ics[i].tx_cfga.spi3w   = FOUR_WIRE;
-
-	    dev->ics[i].tx_cfga.acci    = ACCI_8;
-	    dev->ics[i].tx_cfga.commbk  = COMMBK_OFF;
-	    dev->ics[i].tx_cfga.vb1mux  = SINGLE_ENDED_SGND;
-	    dev->ics[i].tx_cfga.vb2mux  = SINGLE_ENDED_SGND;
-
-	    //CFGB
-	    dev->ics[i].tx_cfgb.gpio1c = PULL_DOWN_OFF;
-	    dev->ics[i].tx_cfgb.gpio2c = PULL_DOWN_OFF;
-	    dev->ics[i].tx_cfgb.gpio3c = PULL_DOWN_OFF;
-	    dev->ics[i].tx_cfgb.gpio4c = PULL_DOWN_OFF;
-
-	    dev->ics[i].tx_cfgb.oc1th = 0x0;
-	    dev->ics[i].tx_cfgb.oc2th = 0x0;
-	    dev->ics[i].tx_cfgb.oc3th = 0x0;
-
-	    dev->ics[i].tx_cfgb.oc1ten = NORMAL_INPUT;
-	    dev->ics[i].tx_cfgb.oc2ten = NORMAL_INPUT;
-	    dev->ics[i].tx_cfgb.oc3ten = NORMAL_INPUT;
-
-	    dev->ics[i].tx_cfgb.ocdgt  = OCDGT0_1oo1;
-	    dev->ics[i].tx_cfgb.ocdp   = OCDP0_NORMAL;
-	    dev->ics[i].tx_cfgb.reften = NORMAL_INPUT;
-	    dev->ics[i].tx_cfgb.octsel = OCTSEL0_OCxADC_P140_REFADC_M20;
-
-	    dev->ics[i].tx_cfgb.ocod   = PUSH_PULL;
-	    dev->ics[i].tx_cfgb.oc1gc  = GAIN_1;
-	    dev->ics[i].tx_cfgb.oc2gc  = GAIN_1;
-	    dev->ics[i].tx_cfgb.oc3gc  = GAIN_1;
-	    dev->ics[i].tx_cfgb.ocmode = OCMODE0_DISABLED;
-	    dev->ics[i].tx_cfgb.ocax   = OCABX_ACTIVE_HIGH;
-	    dev->ics[i].tx_cfgb.ocbx   = OCABX_ACTIVE_HIGH;
-
-	    dev->ics[i].tx_cfgb.diagsel   = DIAGSEL0_IAB_VBAT;
-	    dev->ics[i].tx_cfgb.gpio2eoc  = EOC_DISABLED;
-	}
+	// TODO: Perform custom configuration
+	adbms2950_wrcfga(dev);
+	adbms2950_wrcfgb(dev);
 }
 
 void adbms2950_wrcmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
@@ -156,10 +86,10 @@ void adbms2950_wrdata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_d
 	adbms2950_spi_write(dev, wrbuf, tx_sz, 1);
 }
 
-void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t size)
+void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size)
 {
 	uint16_t pec15;
-	uint16_t rx_sz = size * dev->num_ics;
+	uint16_t rx_sz = reg_size * dev->num_ics;
 	uint8_t wrcmd[CMDSZ + PEC15SZ] = {0};
 
 	wrcmd[0] = cmd[0];
@@ -168,7 +98,130 @@ void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_d
 	wrcmd[2] = (uint8_t)(pec15 >> 8);
 	wrcmd[3] = (uint8_t)pec15;
 
-	adbms2950_spi_write_read(dev, wrcmd, CMDSZ + PEC15SZ, buf, rx_sz, 1);
+	adbms2950_spi_write_read(dev, wrcmd, CMDSZ + PEC15SZ, rx_data, rx_sz, 1);
+}
+
+void adbms2950_reset_cfg_regs(adbms2950_driver_t* dev)
+{
+	// Set device registers to default
+	for(uint8_t i = 0; i < dev->num_ics; i++)
+	{
+		//CFGA
+		dev->ics[i].tx_cfga.gpo1c = PULLED_UP_TRISTATED;
+		dev->ics[i].tx_cfga.gpo2c = PULLED_UP_TRISTATED;
+		dev->ics[i].tx_cfga.gpo3c = PULLED_UP_TRISTATED;
+		dev->ics[i].tx_cfga.gpo4c = PULLED_UP_TRISTATED;
+		dev->ics[i].tx_cfga.gpo5c = PULLED_UP_TRISTATED;
+		dev->ics[i].tx_cfga.gpo6c = PULLED_UP_TRISTATED;
+
+		dev->ics[i].tx_cfga.gpo1od = OPEN_DRAIN;
+		dev->ics[i].tx_cfga.gpo2od = OPEN_DRAIN;
+		dev->ics[i].tx_cfga.gpo3od = OPEN_DRAIN;
+		dev->ics[i].tx_cfga.gpo4od = OPEN_DRAIN;
+		dev->ics[i].tx_cfga.gpo5od = OPEN_DRAIN;
+		dev->ics[i].tx_cfga.gpo6od = OPEN_DRAIN;
+
+		dev->ics[i].tx_cfga.vs1  = VSM_SGND;
+		dev->ics[i].tx_cfga.vs2  = VSM_SGND;
+		dev->ics[i].tx_cfga.vs3  = VSMV_SGND;
+		dev->ics[i].tx_cfga.vs4  = VSMV_SGND;
+		dev->ics[i].tx_cfga.vs5  = VSMV_SGND;
+		dev->ics[i].tx_cfga.vs6  = VSMV_SGND;
+		dev->ics[i].tx_cfga.vs7  = VSMV_SGND;
+		dev->ics[i].tx_cfga.vs8  = VSMV_SGND;
+		dev->ics[i].tx_cfga.vs9  = VSMV_SGND;
+		dev->ics[i].tx_cfga.vs10 = VSMV_SGND;
+
+		dev->ics[i].tx_cfga.injosc = INJOSC0_NORMAL;
+		dev->ics[i].tx_cfga.injmon = INJMON0_NORMAL;
+		dev->ics[i].tx_cfga.injts  = NO_THSD;
+		dev->ics[i].tx_cfga.injecc = NO_ECC;
+		dev->ics[i].tx_cfga.injtm  = NO_TMODE;
+
+		dev->ics[i].tx_cfga.soak    = SOAK_DISABLE;
+		dev->ics[i].tx_cfga.ocen    = OC_DISABLE;
+		dev->ics[i].tx_cfga.gpio1fe = FAULT_STATUS_DISABLE;
+		dev->ics[i].tx_cfga.spi3w   = FOUR_WIRE;
+
+		dev->ics[i].tx_cfga.acci    = ACCI_8;
+		dev->ics[i].tx_cfga.commbk  = COMMBK_OFF;
+		dev->ics[i].tx_cfga.vb1mux  = SINGLE_ENDED_SGND;
+		dev->ics[i].tx_cfga.vb2mux  = SINGLE_ENDED_SGND;
+
+		//CFGB
+		dev->ics[i].tx_cfgb.gpio1c = PULL_DOWN_OFF;
+		dev->ics[i].tx_cfgb.gpio2c = PULL_DOWN_OFF;
+		dev->ics[i].tx_cfgb.gpio3c = PULL_DOWN_OFF;
+		dev->ics[i].tx_cfgb.gpio4c = PULL_DOWN_OFF;
+
+		dev->ics[i].tx_cfgb.oc1th = 0x0;
+		dev->ics[i].tx_cfgb.oc2th = 0x0;
+		dev->ics[i].tx_cfgb.oc3th = 0x0;
+
+		dev->ics[i].tx_cfgb.oc1ten = NORMAL_INPUT;
+		dev->ics[i].tx_cfgb.oc2ten = NORMAL_INPUT;
+		dev->ics[i].tx_cfgb.oc3ten = NORMAL_INPUT;
+
+		dev->ics[i].tx_cfgb.ocdgt  = OCDGT0_1oo1;
+		dev->ics[i].tx_cfgb.ocdp   = OCDP0_NORMAL;
+		dev->ics[i].tx_cfgb.reften = NORMAL_INPUT;
+		dev->ics[i].tx_cfgb.octsel = OCTSEL0_OCxADC_P140_REFADC_M20;
+
+		dev->ics[i].tx_cfgb.ocod   = PUSH_PULL;
+		dev->ics[i].tx_cfgb.oc1gc  = GAIN_1;
+		dev->ics[i].tx_cfgb.oc2gc  = GAIN_1;
+		dev->ics[i].tx_cfgb.oc3gc  = GAIN_1;
+		dev->ics[i].tx_cfgb.ocmode = OCMODE0_DISABLED;
+		dev->ics[i].tx_cfgb.ocax   = OCABX_ACTIVE_HIGH;
+		dev->ics[i].tx_cfgb.ocbx   = OCABX_ACTIVE_HIGH;
+
+		dev->ics[i].tx_cfgb.diagsel   = DIAGSEL0_IAB_VBAT;
+		dev->ics[i].tx_cfgb.gpio2eoc  = EOC_DISABLED;
+	}
+}
+
+void adbms2950_wrcfga(adbms2950_driver_t* dev)
+{
+	uint8_t address;
+
+	adbms2950_pack_cfga(dev);
+	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+	{
+		address = cic * TX_DATA;
+		for(uint8_t byte = 0; byte < TX_DATA; byte++)
+		{
+			buf[address + byte] = dev->ics[cic].configa.tx_data[byte];
+		}
+	}
+	adbms2950_wrdata(dev, WRCFGA, buf);
+}
+
+void adbms2950_wrcfgb(adbms2950_driver_t* dev)
+{
+	uint8_t address;
+
+	adbms2950_pack_cfgb(dev);
+	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+	{
+		address = cic * TX_DATA;
+		for(uint8_t byte = 0; byte < TX_DATA; byte++)
+		{
+			buf[address + byte] = dev->ics[cic].configb.tx_data[byte];
+		}
+	}
+	adbms2950_wrdata(dev, WRCFGB, buf);
+}
+
+void adbms2950_rdcfga(adbms2950_driver_t* dev)
+{
+	adbms2950_rddata(dev, RDCFGA, buf, RX_DATA);
+	adbms2950_parse_cfga(dev, buf);
+}
+
+void adbms2950_rdcfgb(adbms2950_driver_t* dev)
+{
+	adbms2950_rddata(dev, RDCFGB, buf, RX_DATA);
+	adbms2950_parse_cfgb(dev, buf);
 }
 
 void adbms2950_parse_cfga(adbms2950_driver_t* dev, uint8_t *data)
@@ -177,7 +230,7 @@ void adbms2950_parse_cfga(adbms2950_driver_t* dev, uint8_t *data)
   adbms2950_asic* ic = dev->ics;
   for(uint8_t cic = 0; cic < dev->num_ics; cic++)
   {
-    memcpy(&ic[cic].configa.rx_data[0], &data[address], RX_DATA);
+    memcpy(ic[cic].configa.rx_data, &data[address], RX_DATA);
     address = ((cic+1) * (RX_DATA));
 
     ic[cic].rx_cfga.vs1             = (ic[cic].configa.rx_data[0] & 0x03);
@@ -225,13 +278,34 @@ void adbms2950_parse_cfga(adbms2950_driver_t* dev, uint8_t *data)
   }
 }
 
+void adbms2950_pack_cfga(adbms2950_driver_t* dev)
+{
+	adbms2950_asic *ic = dev->ics;
+  for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+  {
+    ic[cic].configa.tx_data[0] = (((ic[cic].tx_cfga.ocen & 0x01) << 7) | ((ic[cic].tx_cfga.vs5 & 0x01) << 6) | ((ic[cic].tx_cfga.vs4 & 0x01) << 5)
+                                      | ((ic[cic].tx_cfga.vs3 & 0x01) << 4) | ((ic[cic].tx_cfga.vs2 & 0x03) << 2) | (ic[cic].tx_cfga.vs1 & 0x03));
+    ic[cic].configa.tx_data[1] = (((ic[cic].tx_cfga.injtm & 0x01) << 7) | ((ic[cic].tx_cfga.injecc & 0x01) << 6) | ((ic[cic].tx_cfga.injts & 0x01) << 4)
+                                      | ((ic[cic].tx_cfga.injmon & 0x03) << 2) | (ic[cic].tx_cfga.injosc & 0x03));
+    ic[cic].configa.tx_data[2] = (((ic[cic].tx_cfga.soak & 0x07) << 5) | ((ic[cic].tx_cfga.vs10 & 0x01) << 4) | ((ic[cic].tx_cfga.vs9 & 0x01) << 3)
+                                      | ((ic[cic].tx_cfga.vs8 & 0x01) << 2) | ((ic[cic].tx_cfga.vs7 & 0x01) << 1) | (ic[cic].tx_cfga.vs6 & 0x01));
+    ic[cic].configa.tx_data[3] = (((ic[cic].tx_cfga.gpo6c & 0x03) << 5) | ((ic[cic].tx_cfga.gpo5c & 0x01) << 4)  | ((ic[cic].tx_cfga.gpo4c & 0x01) << 3)
+                                      | ((ic[cic].tx_cfga.gpo3c & 0x01) << 2) | ((ic[cic].tx_cfga.gpo2c & 0x01) << 1)| (ic[cic].tx_cfga.gpo1c & 0x01));   // GPO1 is at position 0
+    ic[cic].configa.tx_data[4] = (((ic[cic].tx_cfga.spi3w & 0x01)  << 7)| ((ic[cic].tx_cfga.gpio1fe & 0x01) << 6) | ((ic[cic].tx_cfga.gpo6od & 0x01) << 5)
+                                      | ((ic[cic].tx_cfga.gpo5od & 0x01) << 4) |((ic[cic].tx_cfga.gpo4od & 0x01) << 3) | ((ic[cic].tx_cfga.gpo3od & 0x01) << 2)
+                                        | ((ic[cic].tx_cfga.gpo2od & 0x01) << 1) | (ic[cic].tx_cfga.gpo1od & 0x01));
+    ic[cic].configa.tx_data[5] = (((ic[cic].tx_cfga.vb2mux & 0x01)  << 7)| ((ic[cic].tx_cfga.vb1mux & 0x01) << 6) | ((ic[cic].tx_cfga.snapst & 0x01) << 5)
+                                      | ((ic[cic].tx_cfga.refup & 0x01) << 4) |((ic[cic].tx_cfga.commbk & 0x01) << 3) | (ic[cic].tx_cfga.acci & 0x07));
+  }
+}
+
 void adbms2950_parse_cfgb(adbms2950_driver_t* dev, uint8_t *data)
 {
 	uint8_t address = 0;
 	adbms2950_asic *ic = dev->ics;
 	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
 	{
-		memcpy(&ic[cic].configb.rx_data[0], &data[address], RX_DATA); /* dst , src , size */
+		memcpy(ic[cic].configb.rx_data, &data[address], RX_DATA); /* dst , src , size */
 		address = ((cic+1) * (RX_DATA));
 
 		ic[cic].rx_cfgb.oc1th           = (ic[cic].configb.rx_data[0] & 0x7F);
@@ -263,6 +337,27 @@ void adbms2950_parse_cfgb(adbms2950_driver_t* dev, uint8_t *data)
 		ic[cic].rx_cfgb.gpio3c          = (ic[cic].configb.rx_data[5] & 0x40) >> 6;
 		ic[cic].rx_cfgb.gpio4c          = (ic[cic].configb.rx_data[5] & 0x80) >> 7;
 	}
+}
+
+void adbms2950_pack_cfgb(adbms2950_driver_t* dev)
+{
+  adbms2950_asic *ic = dev->ics;
+  for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+  {
+    ic[cic].configb.tx_data[0] = (((ic[cic].tx_cfgb.oc1ten & 0x01) << 7) | (ic[cic].tx_cfgb.oc1th & 0x7F));
+    ic[cic].configb.tx_data[1] = (((ic[cic].tx_cfgb.oc2ten & 0x01) << 7) | (ic[cic].tx_cfgb.oc2th & 0x7F));
+    ic[cic].configb.tx_data[2] = (((ic[cic].tx_cfgb.oc3ten & 0x01) << 7) | (ic[cic].tx_cfgb.oc3th & 0x7F));
+    ic[cic].configb.tx_data[3] = 0x00;
+    ic[cic].configb.tx_data[4] = 0x00;
+    ic[cic].configb.tx_data[5] = 0x00;
+    ic[cic].configb.tx_data[3] = (((ic[cic].tx_cfgb.octsel & 0x03) << 6) | ((ic[cic].tx_cfgb.reften & 0x01) << 5)  | ((ic[cic].tx_cfgb.ocdp & 0x01) << 3)
+                                      | (ic[cic].tx_cfgb.ocdgt & 0x03));   // GPO1 is at position 0
+    ic[cic].configb.tx_data[4] = (((ic[cic].tx_cfgb.ocbx & 0x01)  << 7)| ((ic[cic].tx_cfgb.ocax & 0x01) << 6) | ((ic[cic].tx_cfgb.ocmode & 0x03) << 4)
+                                      |((ic[cic].tx_cfgb.oc3gc & 0x01) << 3) | ((ic[cic].tx_cfgb.oc2gc & 0x01) << 2) | ((ic[cic].tx_cfgb.oc1gc & 0x01) << 1)
+                                        | (ic[cic].tx_cfgb.ocod & 0x01));
+    ic[cic].configb.tx_data[5] = (((ic[cic].tx_cfgb.gpio4c & 0x01)  << 7)| ((ic[cic].tx_cfgb.gpio3c & 0x01) << 6) | ((ic[cic].tx_cfgb.gpio2c & 0x01) << 5)
+                                      | ((ic[cic].tx_cfgb.gpio1c & 0x01) << 4) |((ic[cic].tx_cfgb.gpio2eoc & 0x01) << 3) | (ic[cic].tx_cfgb.diagsel & 0x07));
+  }
 }
 
 void adbms2950_wakeup(adbms2950_driver_t *dev)

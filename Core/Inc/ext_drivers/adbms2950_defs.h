@@ -33,6 +33,119 @@
 #define SPI_TIMEOUT 100
 #define BUFSZ 512
 
+/*!< configuration registers commands */
+uint8_t WRCFGA[2]        = { 0x00, 0x01 };
+uint8_t WRCFGB[2]        = { 0x00, 0x24 };
+uint8_t RDCFGA[2]        = { 0x00, 0x02 };
+uint8_t RDCFGB[2]        = { 0x00, 0x26 };
+
+/* Read VBxADC and IxADC result registers commands */
+uint8_t RDI[2]           = { 0x00, 0x04 };
+uint8_t RDVB[2]          = { 0x00, 0x06 };
+uint8_t RDIVB1[2]        = { 0x00, 0x08 };
+uint8_t RDIACC[2]        = { 0x00, 0x44 };
+uint8_t RDVBACC[2]       = { 0x00, 0x46 };
+uint8_t RDIVB1ACC[2]      = { 0x00, 0x48 };
+
+/* Read OCxADC result registers commands */
+uint8_t RDOC[2]         = { 0x00, 0x0B };
+
+/* Read VxADC result registers commands */
+uint8_t RDV1A[2]         = { 0x00, 0x0A };
+uint8_t RDV1B[2]         = { 0x00, 0x09 };
+uint8_t RDV1C[2]         = { 0x00, 0x03 };
+uint8_t RDV1D[2]         = { 0x00, 0x1B };
+uint8_t RDV2A[2]         = { 0x00, 0x07 };//RDRVA
+uint8_t RDV2B[2]         = { 0x00, 0x0D };
+uint8_t RDV2C[2]         = { 0x00, 0x05 };
+uint8_t RDV2D[2]         = { 0x00, 0x1F };
+uint8_t RDV2E[2]         = { 0x00, 0x25 };
+
+/* Read Status register */
+uint8_t RDSTAT[2]       = { 0x00, 0x34 };
+
+/* Read Flag register */
+uint8_t RDFLAG[2]       = { 0x00, 0x32 };
+uint8_t RDFLAGERR[2]    = { 0x00, 0x72 };   /* ERR */
+
+/* Read AUX ADC result registers */
+uint8_t RDXA[2]       = { 0x00, 0x30 };
+uint8_t RDXB[2]       = { 0x00, 0x31 };
+uint8_t RDXC[2]       = { 0x00, 0x33 };
+
+/* Read all commands */
+//------Read All IxADC and VBxADC results+Status+Flag-------
+uint8_t RDALLI[2]        = { 0x00, 0x0C };
+
+//------Read All IxACC and VBxACC results+Status+Flag-------
+uint8_t RDALLA[2]        = { 0x00, 0x4C };
+
+//------Read All configuration registers+Status+Flag-------
+uint8_t RDALLC[2]        = { 0x00, 0x10 };
+
+//------Read All Voltages-------
+uint8_t RDALLV[2]        = { 0x00, 0x35 };
+
+//------Read All Redundant Voltages-------
+uint8_t RDALLR[2]        = { 0x00, 0x11 };
+
+//------Read All Aux Voltages-------
+uint8_t RDALLX[2]        = { 0x00, 0x51 };
+
+/* Pwm registers commands */
+uint8_t WRPWMA[2]         = { 0x00, 0x20 };
+uint8_t RDPWMA[2]         = { 0x00, 0x22 };
+uint8_t WRPWMB[2]         = { 0x00, 0x21 };
+uint8_t RDPWMB[2]         = { 0x00, 0x23 };
+
+/* Clear commands */
+//uint8_t CLRAB[2]         = { 0x07, 0x11 };
+uint8_t CLRI[2]         = { 0x07, 0x11 };
+uint8_t CLRA[2]         = { 0x07, 0x14 };
+uint8_t CLRO[2]         = { 0x07, 0x13 };
+uint8_t CLRC[2]          = { 0x07, 0x16 };//Ask about CLRC//Sayani
+uint8_t CLRVX [2]       = { 0x07, 0x12 };
+//uint8_t CLRSTAT [2]      = { 0x07, 0x13 };
+uint8_t CLRFLAG[2]       = { 0x07, 0x17 };
+
+/*!< Poll adc command */
+uint8_t PLADC[2]         = { 0x07, 0x18 };
+uint8_t PLI1[2]       = { 0x07, 0x1C };
+uint8_t PLI2[2]       = { 0x07, 0x1D };
+uint8_t PLV[2]        = { 0x07, 0x1E };
+uint8_t PLX[2]         = { 0x07, 0x1F };
+
+/*!< GPIOs Comm commands */
+uint8_t WRCOMM[2]        = { 0x07, 0x21 };
+uint8_t RDCOMM[2]        = { 0x07, 0x22 };
+/*!< command + dummy data for 72 clock cycles */
+uint8_t STCOMM[13]       = { 0x07, 0x23, 0xB9, 0xE4 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00};
+
+/*!< Control Commands */
+uint8_t RDSID[2]         = { 0x00, 0x2C };
+uint8_t RSTCC[2]         = { 0x00, 0x2E };
+uint8_t SNAP[2]          = { 0x00, 0x2D };
+uint8_t UNSNAP[2]        = { 0x00, 0x2F };
+uint8_t SRST[2]          = { 0x00, 0x27 };
+uint8_t sADI1[2]         = { 0x02, 0x60 };
+uint8_t sADX[2]          = { 0x05, 0x30 };
+
+//Command + pec
+uint8_t RSTATD[4]        = {0x00, 0x33, 0x4D, 0x4A};  //Command +Pec
+//uint8_t RSTATC[4]        = {0x00, 0x32, 0xc6, 0x78}; // Tiger CC is in Status C
+uint8_t RFLAG[4]        = {0x00, 0x32, 0xc6, 0x78}; // Tiger CC is in Flag//Check PEC code//Sayani//Put breakpoint at Pec15_Calc for RDFLAG to check
+uint8_t sRDI[4]          = {0x00, 0x04, 0x07, 0xC2};
+uint8_t sCLRAB[4]        = {0x07,0x11,0xC9,0xC0};
+//uint8_t sRSTATA [4]      = { 0x00, 0x30, 0x5B, 0x2E };
+uint8_t sRDVA [4]        = { 0x00, 0x0A ,  0xC3 , 0x04};
+uint8_t sRDVB [4]        = { 0x00, 0x09 , 0xD5 , 0x60};
+uint8_t sRDVC [4]        = { 0x00, 0x03 , 0xA0, 0x38};
+uint8_t sRDVD [4]        = { 0x00, 0x05 , 0x8C, 0xF0};
+uint8_t sRDIAV[4]        = { 0x00, 0x44 , 0xE0, 0x48};
+uint8_t sRDVBAT[4]       = { 0x00, 0x06 , 0x9A, 0x94};
+/* Testmode and debugging commands */
+uint8_t TM_48[2]       = { 0x00, 0x0E };        // LION: RDSVE
+
 /*!
 *  \enum Single & Round-Robin Measurement.
 * VCH: Single & Round-Robin Measurement Cmd bytes.
@@ -956,64 +1069,6 @@ typedef struct
   uint8_t tmodchk;
 } diag_test_;
 
-/*!< ADBMS2950 IC main structure */
-typedef struct
-{
-  cfa_ tx_cfga;
-  cfa_ rx_cfga;
-  cfb_ tx_cfgb;
-  cfb_ rx_cfgb;
-  flag_ flag;
-  flag_ clflag;
-  crg_ i;
-  iacc_ iacc;
-  vbat_ vbat;
-  vbacc_ vbacc;
-  i_vbat_ ivbat;
-  i_vbacc_ i_vbacc;
-  vr_  vr;
-  rvr_ rvr;
-  oc_ oc;
-  auxa_ auxa;
-  auxb_ auxb;
-  auxc_ auxc;
-  rdalli_ rdalli;
-  rdalla_ rdalla;
-  rdallc_ rdallc;
-  rdallv_ rdallv;
-  rdallr_ rdallr;
-  rdallx_ rdallx;
-  state_ state;
-  com_ tx_comm;
-  com_ rx_comm;
-  sid_ sid;
-  ic_register_ configa;
-  ic_register_ configb;
-  ic_register_ clrflag;
-  ic_register_ reg;
-  ic_register_ axa;
-  ic_register_ axb;
-  ic_register_ axc;
-  ic_register_ flg;
-  ic_register_ ste;
-  ic_register_ rdlli;
-  ic_register_ rdlla;
-  ic_register_ rdllc;
-  ic_register_ rdllv;
-  ic_register_ rdllr;
-  ic_register_ rdllx;
-  ic_register_ com;
-  ic_register_ rsid;
-  cmdcnt_pec_ cccrc;
-  uint32_t pladc_count;
-  uint32_t OCTicks;
-  uint32_t cal_count;
-  tm48_ tm48;
-  uint8_t Result;
-  uint8_t ResultLoc;
-  uint8_t OC_PWM_Result;
-} adbms2950_asic;
-
 /* hold loop manager variables */
 typedef struct
 {
@@ -1043,21 +1098,6 @@ typedef enum
 	STRING_A = 0,
 	STRING_B
 } adbms2950_string;
-
-/* adbms2950 main driver */
-typedef struct
-{
-  uint8_t num_ics;
-  adbms2950_asic *ics;
-  loop_manager_t loop_manager;
-  pladc_manager_t pladc_manager;
-  adc_configuration_t config;
-	SPI_HandleTypeDef *hspi;
-	GPIO_TypeDef *cs_port[2];
-	uint16_t cs_pin[2];
-	adbms2950_string string;
-	TIM_HandleTypeDef *htim;
-} adbms2950_driver_t;
 
 /* ADI1 command parameters structure */
 typedef struct
