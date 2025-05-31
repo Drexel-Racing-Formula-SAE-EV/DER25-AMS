@@ -128,6 +128,8 @@ uint8_t SNAP[2]          = { 0x00, 0x2D };
 uint8_t UNSNAP[2]        = { 0x00, 0x2F };
 uint8_t SRST[2]          = { 0x00, 0x27 };
 uint8_t sADI1[2]         = { 0x02, 0x60 };
+uint8_t sADI2[2]         = { 0x01, 0x68 };
+uint8_t sADV[2]          = { 0x04, 0x30 };
 uint8_t sADX[2]          = { 0x05, 0x30 };
 
 //Command + pec

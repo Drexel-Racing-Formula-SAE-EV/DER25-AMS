@@ -66,6 +66,8 @@ typedef struct
   uint8_t Result;
   uint8_t ResultLoc;
   uint8_t OC_PWM_Result;
+  uint8_t rx_pec_error;
+  uint8_t rx_cmd_cntr;
 } adbms2950_asic;
 
 /* adbms2950 main driver */
@@ -93,31 +95,32 @@ void adbms2950_init(adbms2950_driver_t* dev,
 					uint16_t CSB_Pin,
 					TIM_HandleTypeDef* htim);
 
+// Configuration
 void adbms2950_reset_cfg_regs(adbms2950_driver_t* dev);
 void adbms2950_wrcfga(adbms2950_driver_t* dev);
 void adbms2950_wrcfgb(adbms2950_driver_t* dev);
 void adbms2950_rdcfga(adbms2950_driver_t* dev);
 void adbms2950_rdcfgb(adbms2950_driver_t* dev);
-void adbms2950_parse_cfga(adbms2950_driver_t* dev, uint8_t* data);
-void adbms2950_pack_cfga(adbms2950_driver_t* dev);
-void adbms2950_parse_cfgb(adbms2950_driver_t* dev, uint8_t* data);
-void adbms2950_pack_cfgb(adbms2950_driver_t* dev);
 
+// Operational Commands
+void adbms2950_adi1(adbms2950_driver_t* dev, adi1_* arg); //cmd, starts i1adc, vb1adc
+void adbms2950_adi2(adbms2950_driver_t* dev, adi2_* arg); //cmd, starts i2adc, vb2adc
+void adbms2950_adv(adbms2950_driver_t* dev, adv_* arg); //cmd, starts v1adc, v2adc
+
+// not needed since we will run IxADCs and VBxADCs in continuous mode
+//void adbms2950_pli1(adbms2950_driver_t* dev); //cmd, polls i1adc, vb1adc
+//void adbms2950_pli2(adbms2950_driver_t* dev); //cmd, polls i2adc, vb2adc
+void adbms2950_plv(adbms2950_driver_t* dev); //cmd, polls v1adc, v2adc
+
+void adbms2950_rdvb(adbms2950_driver_t* dev); //rd48, reads vb1adc, vb2adc
+void adbms2950_rdi(adbms2950_driver_t* dev); //rd48, reads i1adc, i2adc
+void adbms2950_rdv1d(adbms2950_driver_t* dev); //rd48, reads v1adc for v7a, v2adc for v9b
+
+
+// Control
 void adbms2950_wakeup(adbms2950_driver_t *dev);
 
-void adbms2950_wrcmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ]);
-void adbms2950_wrdata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data);
-void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t size);
-
-void adbms2950_set_cs(adbms2950_driver_t* dev, uint8_t state);
-void adbms2950_usleep(adbms2950_driver_t* dev, uint32_t microseconds);
-void adbms2950_spi_write(adbms2950_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs);
-void adbms2950_spi_write_read(adbms2950_driver_t *dev,
-							  uint8_t* tx_Data,
-							  uint8_t tx_len,
-							  uint8_t* rx_data,
-							  uint8_t rx_len,
-							  uint8_t use_cs);
+// Data validation
 uint16_t Pec15_Calc(uint8_t len, uint8_t *data);
 uint16_t pec10_calc(uint8_t rx_cmd, int len, uint8_t *data);
 uint16_t pec10_calc_modular(uint8_t * data, uint8_t PEC_Format);

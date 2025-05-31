@@ -11,6 +11,29 @@
 uint8_t buf[BUFSZ] = {0};
 uint8_t wrbuf[BUFSZ] = {0};
 
+// Tx/Rx Utility
+void adbms2950_wrcmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ]);
+void adbms2950_wrdata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data);
+void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size);
+
+// SPI communication
+void adbms2950_set_cs(adbms2950_driver_t* dev, uint8_t state);
+void adbms2950_usleep(adbms2950_driver_t* dev, uint32_t microseconds);
+void adbms2950_spi_write(adbms2950_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs);
+void adbms2950_spi_write_read(adbms2950_driver_t *dev, uint8_t* tx_Data, uint8_t tx_len, uint8_t* rx_data, uint8_t rx_len, uint8_t use_cs);
+
+// Data parsing
+void adbms2950_parse_cfga(adbms2950_driver_t* dev, uint8_t* data);
+void adbms2950_parse_cfgb(adbms2950_driver_t* dev, uint8_t* data);
+void adbms2950_parse_rdvb(adbms2950_driver_t* dev, uint8_t* vbat_data);
+void adbms2950_parse_rdi(adbms2950_driver_t* dev, uint8_t* i_data);
+void adbms2950_parse_rdv1d(adbms2950_driver_t* dev, uint8_t* v_data);
+
+// Data packing
+void adbms2950_pack_cfga(adbms2950_driver_t* dev);
+void adbms2950_pack_cfgb(adbms2950_driver_t* dev);
+
+
 void adbms2950_init(adbms2950_driver_t *dev,
 					uint8_t num_asics,
 					adbms2950_asic *ics,
@@ -41,6 +64,11 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	// TODO: Perform custom configuration
 	adbms2950_wrcfga(dev);
 	adbms2950_wrcfgb(dev);
+
+	adi1_ adi1;
+	adi1.rd = 0x01; // Redundant mode enabled, no need to call ADI2
+	adi1.opt = 0x0C; //Continuous mode 0b1100, See Table 42 page 34
+	adbms2950_adi1(dev, &adi1);
 }
 
 void adbms2950_wrcmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
@@ -91,6 +119,8 @@ void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_d
 	uint16_t pec15;
 	uint16_t rx_sz = reg_size * dev->num_ics;
 	uint8_t wrcmd[CMDSZ + PEC15SZ] = {0};
+	uint8_t src_address;
+	uint16_t received_pec, calculated_pec;
 
 	wrcmd[0] = cmd[0];
 	wrcmd[1] = cmd[1];
@@ -99,6 +129,19 @@ void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_d
 	wrcmd[3] = (uint8_t)pec15;
 
 	adbms2950_spi_write_read(dev, wrcmd, CMDSZ + PEC15SZ, rx_data, rx_sz, 1);
+
+    for (uint8_t current_ic = 0; current_ic < dev->num_ics; current_ic++)
+    {
+      /*!< Get command counter value */
+      dev->ics[current_ic].rx_cmd_cntr = (rx_data[(current_ic * rx_sz) + (rx_sz - 2)] >> 2);
+      /*!< Get received pec value from ic*/
+      received_pec = (uint16_t)(((rx_data[(current_ic * rx_sz) + (rx_sz - 2)] & 0x03) << 8) | rx_data[(current_ic * rx_sz) + (rx_sz - 1)]);
+      src_address = (current_ic * (reg_size));
+      /*!< Calculate data pec */
+      calculated_pec = (uint16_t)pec10_calc(1, (rx_sz - DPECSZ), &rx_data[src_address]);
+      /*!< Match received pec with calculated pec */
+      dev->ics[current_ic].rx_pec_error = (received_pec != calculated_pec);
+    }
 }
 
 void adbms2950_reset_cfg_regs(adbms2950_driver_t* dev)
@@ -230,8 +273,8 @@ void adbms2950_parse_cfga(adbms2950_driver_t* dev, uint8_t *data)
   adbms2950_asic* ic = dev->ics;
   for(uint8_t cic = 0; cic < dev->num_ics; cic++)
   {
+	  address = cic * RX_DATA;
     memcpy(ic[cic].configa.rx_data, &data[address], RX_DATA);
-    address = ((cic+1) * (RX_DATA));
 
     ic[cic].rx_cfga.vs1             = (ic[cic].configa.rx_data[0] & 0x03);
     ic[cic].rx_cfga.vs2             = (ic[cic].configa.rx_data[0] & 0x0C) >> 2;
@@ -358,6 +401,104 @@ void adbms2950_pack_cfgb(adbms2950_driver_t* dev)
     ic[cic].configb.tx_data[5] = (((ic[cic].tx_cfgb.gpio4c & 0x01)  << 7)| ((ic[cic].tx_cfgb.gpio3c & 0x01) << 6) | ((ic[cic].tx_cfgb.gpio2c & 0x01) << 5)
                                       | ((ic[cic].tx_cfgb.gpio1c & 0x01) << 4) |((ic[cic].tx_cfgb.gpio2eoc & 0x01) << 3) | (ic[cic].tx_cfgb.diagsel & 0x07));
   }
+}
+
+void adbms2950_adi1(adbms2950_driver_t* dev, adi1_* arg)
+{
+	uint8_t cmd[CMDSZ];
+	uint8_t rd = arg->rd & 0x01;
+	uint8_t opt = arg->opt & 0x0F;
+
+	cmd[0] = sADI1[0] | rd;
+	cmd[1] = sADI1[1] | ((opt & 0x08) << 4) | ((opt & 0x04) << 2) | (opt & 0x03);
+
+	adbms2950_wrcmd(dev, cmd);
+}
+
+void adbms2950_adi2(adbms2950_driver_t* dev, adi2_* arg)
+{
+	uint8_t cmd[CMDSZ];
+	uint8_t opt = arg->opt & 0x0F;
+
+	cmd[0] = sADI2[0];
+	cmd[1] = sADI2[1] | ((opt & 0x08) << 4) | ((opt & 0x04) << 2) | (opt & 0x03);
+
+	adbms2950_wrcmd(dev, cmd);
+}
+
+// Use OW off: 00
+// use channel 6 to measure both V7 and V9 at once
+void adbms2950_adv(adbms2950_driver_t* dev, adv_* arg)
+{
+	uint8_t cmd[CMDSZ];
+	uint8_t OW = arg->ow & 0x03;
+	uint8_t VCH = arg->ch & 0x0F;
+
+	cmd[0] = sADV[0];
+	cmd[1] = sADV[1] | (OW << 6) | VCH;
+
+	adbms2950_wrcmd(dev, cmd);
+}
+
+void adbms2950_plv(adbms2950_driver_t* dev)
+{
+	adbms2950_wrcmd(dev, PLV);
+}
+
+void adbms2950_rdvb(adbms2950_driver_t* dev)
+{
+	adbms2950_rddata(dev, RDVB, buf, RX_DATA);
+	adbms2950_parse_rdvb(dev, buf);
+}
+
+void adbms2950_parse_rdvb(adbms2950_driver_t* dev, uint8_t* vbat_data)
+{
+	  uint8_t address = 0;
+	  for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+	  {
+		  address = cic * RX_DATA;
+	    memcpy(&dev->ics[cic].reg.rx_data[0], &vbat_data[address], RX_DATA);
+	    dev->ics[cic].vbat.vbat1 = dev->ics[cic].reg.rx_data[2] + (dev->ics[cic].reg.rx_data[3] << 8);
+	    dev->ics[cic].vbat.vbat2 = dev->ics[cic].reg.rx_data[4] + (dev->ics[cic].reg.rx_data[5] << 8);
+	  }
+}
+
+void adbms2950_rdi(adbms2950_driver_t* dev)
+{
+	adbms2950_rddata(dev, RDI, buf, RX_DATA);
+	adbms2950_parse_rdi(dev, buf);
+}
+
+void adbms2950_parse_rdi(adbms2950_driver_t* dev, uint8_t* i_data)
+{
+	  uint8_t address = 0;
+	  for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+	  {
+		  address = cic * RX_DATA;
+	    memcpy(&dev->ics[cic].reg.rx_data[0], &i_data[address], RX_DATA);
+	    dev->ics[cic].i.i1 = dev->ics[cic].reg.rx_data[0] + (dev->ics[cic].reg.rx_data[1] << 8) + (dev->ics[cic].reg.rx_data[2] << 16);
+	    dev->ics[cic].i.i2 = dev->ics[cic].reg.rx_data[3] + (dev->ics[cic].reg.rx_data[4] << 8) + (dev->ics[cic].reg.rx_data[5] << 16);
+	  }
+}
+
+void adbms2950_rdv1d(adbms2950_driver_t* dev)
+{
+	adbms2950_rddata(dev, RDV1D, buf, RX_DATA);
+	adbms2950_parse_rdv1d(dev, buf);
+}
+
+void adbms2950_parse_rdv1d(adbms2950_driver_t* dev, uint8_t* v_data)
+{
+	uint8_t address;
+	uint8_t temp[RX_DATA];
+	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+	{
+		address = cic * RX_DATA;
+		memcpy(temp, &v_data[address], RX_DATA);
+		dev->ics[cic].vr.v_codes[9] =  (temp[0] + (temp[1] << 8)); // V7A
+		dev->ics[cic].vr.v_codes[10] =  (temp[2] + (temp[3] << 8)); // V8A
+		dev->ics[cic].vr.v_codes[11] =  (temp[4] + (temp[5] << 8)); // V9B
+	}
 }
 
 void adbms2950_wakeup(adbms2950_driver_t *dev)
