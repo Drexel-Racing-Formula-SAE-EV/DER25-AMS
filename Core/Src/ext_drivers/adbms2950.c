@@ -12,9 +12,9 @@ uint8_t buf[BUFSZ] = {0};
 uint8_t wrbuf[BUFSZ] = {0};
 
 // Tx/Rx Utility
-void adbms2950_wrcmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ]);
-void adbms2950_wrdata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data);
-void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size);
+void adbms2950_cmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ]);
+void adbms2950_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data);
+void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size);
 
 // SPI communication
 void adbms2950_set_cs(adbms2950_driver_t* dev, uint8_t state);
@@ -59,19 +59,40 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	dev->string = STRING_A;
 	adbms2950_set_cs(dev, 1);
 
-	adbms2950_reset_cfg_regs(dev);
+	adbms2950_srst(dev);
+	// TODO: delay 8ms
 
-	// TODO: Perform custom configuration
+	adbms2950_reset_cfg_regs(dev);
+	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+	{
+		// GPO1 as PUSH-PULL, set to LOW
+		dev->ics[cic].tx_cfga.gpo1od = PUSH_PULL;
+		dev->ics[cic].tx_cfga.gpo1c = PULLED_DOWN;
+
+		// GPO2 as PUSH-PULL, set to LOW
+		dev->ics[cic].tx_cfga.gpo2od = PUSH_PULL;
+		dev->ics[cic].tx_cfga.gpo2c = PULLED_DOWN;
+	}
+
 	adbms2950_wrcfga(dev);
 	adbms2950_wrcfgb(dev);
+	// TODO: add delay?
+	adbms2950_rdcfga(dev);
+	adbms2950_rdcfgb(dev);
 
+	// Using Redundant, Continuous measurement
+	// See Table 42 page 34
 	adi1_ adi1;
-	adi1.rd = 0x01; // Redundant mode enabled, no need to call ADI2
-	adi1.opt = 0x0C; //Continuous mode 0b1100, See Table 42 page 34
+	adi1.rd = RD_ON;
+	adi1.opt = OPT12_C;
 	adbms2950_adi1(dev, &adi1);
+
+	// TODO: when calling ADV use in Accumulator driver
+	// Use OW off: OW_OFF
+	// Use VCH: SM_V7_V9
 }
 
-void adbms2950_wrcmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
+void adbms2950_cmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
 {
 	uint16_t pec15;
 	wrbuf[0] = cmd[0];
@@ -83,7 +104,7 @@ void adbms2950_wrcmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
 	adbms2950_spi_write(dev, wrbuf, CMDSZ + PEC15SZ, 1);
 }
 
-void adbms2950_wrdata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data)
+void adbms2950_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data)
 {
 	uint16_t pec15;
 	uint16_t pec10;
@@ -114,7 +135,7 @@ void adbms2950_wrdata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_d
 	adbms2950_spi_write(dev, wrbuf, tx_sz, 1);
 }
 
-void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size)
+void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size)
 {
 	uint16_t pec15;
 	uint16_t rx_sz = reg_size * dev->num_ics;
@@ -223,6 +244,11 @@ void adbms2950_reset_cfg_regs(adbms2950_driver_t* dev)
 	}
 }
 
+void adbms2950_srst(adbms2950_driver_t* dev)
+{
+	adbms2950_cmd(dev, SRST);
+}
+
 void adbms2950_wrcfga(adbms2950_driver_t* dev)
 {
 	uint8_t address;
@@ -236,7 +262,7 @@ void adbms2950_wrcfga(adbms2950_driver_t* dev)
 			buf[address + byte] = dev->ics[cic].configa.tx_data[byte];
 		}
 	}
-	adbms2950_wrdata(dev, WRCFGA, buf);
+	adbms2950_wr48(dev, WRCFGA, buf);
 }
 
 void adbms2950_wrcfgb(adbms2950_driver_t* dev)
@@ -252,18 +278,18 @@ void adbms2950_wrcfgb(adbms2950_driver_t* dev)
 			buf[address + byte] = dev->ics[cic].configb.tx_data[byte];
 		}
 	}
-	adbms2950_wrdata(dev, WRCFGB, buf);
+	adbms2950_wr48(dev, WRCFGB, buf);
 }
 
 void adbms2950_rdcfga(adbms2950_driver_t* dev)
 {
-	adbms2950_rddata(dev, RDCFGA, buf, RX_DATA);
+	adbms2950_rd48(dev, RDCFGA, buf, RX_DATA);
 	adbms2950_parse_cfga(dev, buf);
 }
 
 void adbms2950_rdcfgb(adbms2950_driver_t* dev)
 {
-	adbms2950_rddata(dev, RDCFGB, buf, RX_DATA);
+	adbms2950_rd48(dev, RDCFGB, buf, RX_DATA);
 	adbms2950_parse_cfgb(dev, buf);
 }
 
@@ -412,7 +438,7 @@ void adbms2950_adi1(adbms2950_driver_t* dev, adi1_* arg)
 	cmd[0] = sADI1[0] | rd;
 	cmd[1] = sADI1[1] | ((opt & 0x08) << 4) | ((opt & 0x04) << 2) | (opt & 0x03);
 
-	adbms2950_wrcmd(dev, cmd);
+	adbms2950_cmd(dev, cmd);
 }
 
 void adbms2950_adi2(adbms2950_driver_t* dev, adi2_* arg)
@@ -423,11 +449,9 @@ void adbms2950_adi2(adbms2950_driver_t* dev, adi2_* arg)
 	cmd[0] = sADI2[0];
 	cmd[1] = sADI2[1] | ((opt & 0x08) << 4) | ((opt & 0x04) << 2) | (opt & 0x03);
 
-	adbms2950_wrcmd(dev, cmd);
+	adbms2950_cmd(dev, cmd);
 }
 
-// Use OW off: 00
-// use channel 6 to measure both V7 and V9 at once
 void adbms2950_adv(adbms2950_driver_t* dev, adv_* arg)
 {
 	uint8_t cmd[CMDSZ];
@@ -437,17 +461,17 @@ void adbms2950_adv(adbms2950_driver_t* dev, adv_* arg)
 	cmd[0] = sADV[0];
 	cmd[1] = sADV[1] | (OW << 6) | VCH;
 
-	adbms2950_wrcmd(dev, cmd);
+	adbms2950_cmd(dev, cmd);
 }
 
 void adbms2950_plv(adbms2950_driver_t* dev)
 {
-	adbms2950_wrcmd(dev, PLV);
+	adbms2950_cmd(dev, PLV);
 }
 
 void adbms2950_rdvb(adbms2950_driver_t* dev)
 {
-	adbms2950_rddata(dev, RDVB, buf, RX_DATA);
+	adbms2950_rd48(dev, RDVB, buf, RX_DATA);
 	adbms2950_parse_rdvb(dev, buf);
 }
 
@@ -465,7 +489,7 @@ void adbms2950_parse_rdvb(adbms2950_driver_t* dev, uint8_t* vbat_data)
 
 void adbms2950_rdi(adbms2950_driver_t* dev)
 {
-	adbms2950_rddata(dev, RDI, buf, RX_DATA);
+	adbms2950_rd48(dev, RDI, buf, RX_DATA);
 	adbms2950_parse_rdi(dev, buf);
 }
 
@@ -483,7 +507,7 @@ void adbms2950_parse_rdi(adbms2950_driver_t* dev, uint8_t* i_data)
 
 void adbms2950_rdv1d(adbms2950_driver_t* dev)
 {
-	adbms2950_rddata(dev, RDV1D, buf, RX_DATA);
+	adbms2950_rd48(dev, RDV1D, buf, RX_DATA);
 	adbms2950_parse_rdv1d(dev, buf);
 }
 
@@ -498,6 +522,36 @@ void adbms2950_parse_rdv1d(adbms2950_driver_t* dev, uint8_t* v_data)
 		dev->ics[cic].vr.v_codes[9] =  (temp[0] + (temp[1] << 8)); // V7A
 		dev->ics[cic].vr.v_codes[10] =  (temp[2] + (temp[3] << 8)); // V8A
 		dev->ics[cic].vr.v_codes[11] =  (temp[4] + (temp[5] << 8)); // V9B
+	}
+}
+
+void adbms2950_gpo_set(adbms2950_driver_t* dev, GPO gpo, CFGA_GPO state)
+{
+	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
+	{
+		switch(gpo)
+		{
+			case GPO1:
+				dev->ics[cic].tx_cfga.gpo1c = state;
+				break;
+			case GPO2:
+				dev->ics[cic].tx_cfga.gpo2c = state;
+				break;
+			case GPO3:
+				dev->ics[cic].tx_cfga.gpo3c = state;
+				break;
+			case GPO4:
+				dev->ics[cic].tx_cfga.gpo4c = state;
+				break;
+			case GPO5:
+				dev->ics[cic].tx_cfga.gpo5c = state;
+				break;
+			case GPO6:
+				dev->ics[cic].tx_cfga.gpo6c = state;
+				break;
+			default:
+				return;
+		}
 	}
 }
 
@@ -717,6 +771,3 @@ uint16_t pec10_calc_int(uint16_t remainder, uint8_t bit)
     }
     return ((uint16_t)(remainder & 0x3FFu));
 }
-
-
-

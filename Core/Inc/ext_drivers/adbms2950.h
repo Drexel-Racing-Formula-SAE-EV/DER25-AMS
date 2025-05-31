@@ -103,19 +103,18 @@ void adbms2950_rdcfga(adbms2950_driver_t* dev);
 void adbms2950_rdcfgb(adbms2950_driver_t* dev);
 
 // Operational Commands
+void adbms2950_srst(adbms2950_driver_t* dev);
 void adbms2950_adi1(adbms2950_driver_t* dev, adi1_* arg); //cmd, starts i1adc, vb1adc
 void adbms2950_adi2(adbms2950_driver_t* dev, adi2_* arg); //cmd, starts i2adc, vb2adc
 void adbms2950_adv(adbms2950_driver_t* dev, adv_* arg); //cmd, starts v1adc, v2adc
 
-// not needed since we will run IxADCs and VBxADCs in continuous mode
-//void adbms2950_pli1(adbms2950_driver_t* dev); //cmd, polls i1adc, vb1adc
-//void adbms2950_pli2(adbms2950_driver_t* dev); //cmd, polls i2adc, vb2adc
 void adbms2950_plv(adbms2950_driver_t* dev); //cmd, polls v1adc, v2adc
 
 void adbms2950_rdvb(adbms2950_driver_t* dev); //rd48, reads vb1adc, vb2adc
 void adbms2950_rdi(adbms2950_driver_t* dev); //rd48, reads i1adc, i2adc
 void adbms2950_rdv1d(adbms2950_driver_t* dev); //rd48, reads v1adc for v7a, v2adc for v9b
 
+void adbms2950_gpo_set(adbms2950_driver_t* dev, GPO gpo, CFGA_GPO state);
 
 // Control
 void adbms2950_wakeup(adbms2950_driver_t *dev);
