@@ -9,6 +9,7 @@
 #define INC_EXT_DRIVERS_ADBMS2950_H_
 
 #include "ext_drivers/adbms2950_defs.h"
+#include "stm32f7xx_hal.h"
 
 /*!< ADBMS2950 IC main structure */
 typedef struct

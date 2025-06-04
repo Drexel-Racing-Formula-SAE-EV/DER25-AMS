@@ -10,13 +10,20 @@
 
 #include <stdbool.h>
 #include "stm32f7xx_hal.h"
+#include "ext_drivers/adbms2950.h"
 
+/* SMB Macros */
 #define NSEGS 1
-#define NCELLS 14
-#define NTEMPS 16
+#define NCELLS 15
+#define NTEMPS 24
 #define MUX_ADDR7_00 0x4C
 #define MUX_ADDR7_01 0x4D
 #define VNTC 5.0
+
+/* APM Macros */
+#define NAPMS 1
+#define HVEN1 GPO1
+#define HVEN2 GPO2
 
 typedef struct
 {
@@ -24,15 +31,18 @@ typedef struct
 	float max_temp;
 	float max_volt;
 	float min_volt;
+
+	adbms2950_asic apm_ics[NAPMS];
+	adbms2950_driver_t apm;
 } accumulator_t;
 
 void accumulator_init(accumulator_t *dev,
-				      SPI_HandleTypeDef *hspi_a,
-					  SPI_HandleTypeDef *hspi_b,
+				      SPI_HandleTypeDef *hspi,
 					  GPIO_TypeDef *cs_port_a,
 					  GPIO_TypeDef *cs_port_b,
 					  uint16_t cs_pin_a,
-					  uint16_t cs_pin_b
+					  uint16_t cs_pin_b,
+					  TIM_HandleTypeDef* htim
 					  );
 int accumulator_read_volt(accumulator_t *dev);
 int accumulator_read_temp(accumulator_t *dev);

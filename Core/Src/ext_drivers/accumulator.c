@@ -9,19 +9,38 @@
 #include <math.h>
 
 void accumulator_init(accumulator_t *dev,
-				      SPI_HandleTypeDef *hspi_a,
-					  SPI_HandleTypeDef *hspi_b,
+				      SPI_HandleTypeDef *hspi,
 					  GPIO_TypeDef *cs_port_a,
 					  GPIO_TypeDef *cs_port_b,
 					  uint16_t cs_pin_a,
-					  uint16_t cs_pin_b)
+					  uint16_t cs_pin_b,
+					  TIM_HandleTypeDef* htim)
 {
 	dev->total_volt = 0;
+	dev->max_temp = 0.0f;
+	dev->max_volt = 0.0f;
+	dev->min_volt = 0.0f;
+
+	HAL_TIM_Base_Start(htim);
+
+	// Init pack monitor, just on port A
+	adbms2950_init(&dev->apm, NAPMS, dev->apm_ics, hspi, cs_port_a, cs_port_a, cs_pin_a, cs_pin_a, htim);
 }
 
 int accumulator_read_volt(accumulator_t *dev)
 {
 	int ret = 0;
+	adbms2950_gpo_set(&dev->apm, HVEN1, GPO_SET);
+	adbms2950_gpo_set(&dev->apm, HVEN2, GPO_SET);
+	adbms2950_wrcfga(&dev->apm);
+
+	adbms2950_rdvb(&dev->apm);
+	adbms2950_rdi(&dev->apm);
+
+	adbms2950_gpo_set(&dev->apm, HVEN1, GPO_CLR);
+	adbms2950_gpo_set(&dev->apm, HVEN2, GPO_CLR);
+	adbms2950_wrcfga(&dev->apm);
+
     return ret;
 }
 
