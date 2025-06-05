@@ -10,6 +10,12 @@
 
 #include <stdint.h>
 
+#define NVBATS 2 // Number of VBat ADC values
+#define NVIS 2 // Number of Current ADC values
+
+#define VBAT_SCALE 0.0001f
+#define VBAT_DIV_SCALE (3622.0f / 22.0f) // 3.622MR / 22kR
+
 #define VR_SIZE 12              /*!< Bms ic number of Voltage Resister  */
 #define RVR_SIZE 13             /* Bms ic number of Redundant Voltage Resister  */
 #define COMM 3                  /*!< communication comm reg byte size   */

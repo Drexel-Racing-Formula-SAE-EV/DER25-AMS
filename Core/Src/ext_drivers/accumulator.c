@@ -24,7 +24,7 @@ void accumulator_init(accumulator_t *dev,
 	HAL_TIM_Base_Start(htim);
 
 	// Init pack monitor, just on port A
-	adbms2950_init(&dev->apm, NAPMS, dev->apm_ics, hspi, cs_port_a, cs_port_a, cs_pin_a, cs_pin_a, htim);
+	adbms2950_init(&dev->apm, NAPMS, dev->apm_ics, hspi, cs_port_b, cs_port_b, cs_pin_b, cs_pin_b, htim);
 }
 
 int accumulator_read_volt(accumulator_t *dev)
@@ -32,14 +32,20 @@ int accumulator_read_volt(accumulator_t *dev)
 	int ret = 0;
 	adbms2950_gpo_set(&dev->apm, HVEN1, GPO_SET);
 	adbms2950_gpo_set(&dev->apm, HVEN2, GPO_SET);
+	adbms2950_wakeup(&dev->apm);
 	adbms2950_wrcfga(&dev->apm);
+	adbms2950_rdcfga(&dev->apm);
 
+	adbms2950_us_delay(&dev->apm, 500);
+	adbms2950_wakeup(&dev->apm);
 	adbms2950_rdvb(&dev->apm);
 	adbms2950_rdi(&dev->apm);
 
-	adbms2950_gpo_set(&dev->apm, HVEN1, GPO_CLR);
-	adbms2950_gpo_set(&dev->apm, HVEN2, GPO_CLR);
-	adbms2950_wrcfga(&dev->apm);
+	dev->apm.vbat_adc[0] = dev->apm_ics[0].vbat.vbat1 * VBAT_SCALE;
+	dev->apm.vbat_adc[1] = dev->apm_ics[0].vbat.vbat2 * VBAT_SCALE;
+
+	dev->apm.vbat[0] = dev->apm.vbat_adc[0] * VBAT_DIV_SCALE;
+	dev->apm.vbat[1] = dev->apm.vbat_adc[1] * VBAT_DIV_SCALE;
 
     return ret;
 }

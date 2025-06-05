@@ -74,6 +74,10 @@ typedef struct
 /* adbms2950 main driver */
 typedef struct
 {
+	float vbat[NVBATS]; // Actual battery voltage
+	float current[NVBATS]; // Actual current value
+	float vbat_adc[NVBATS]; // VBAT ADC voltage
+	float vi_adc[NVIS]; // VI ADC voltage
   uint8_t num_ics;
   adbms2950_asic *ics;
   loop_manager_t loop_manager;
@@ -119,6 +123,8 @@ void adbms2950_gpo_set(adbms2950_driver_t* dev, GPO gpo, CFGA_GPO state);
 
 // Control
 void adbms2950_wakeup(adbms2950_driver_t *dev);
+// Utility
+void adbms2950_us_delay(adbms2950_driver_t* dev, uint16_t microseconds);
 
 // Data validation
 uint16_t Pec15_Calc(uint8_t len, uint8_t *data);

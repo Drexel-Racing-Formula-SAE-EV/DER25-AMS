@@ -133,7 +133,6 @@ void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_dat
 
 // SPI communication
 void adbms2950_set_cs(adbms2950_driver_t* dev, uint8_t state);
-void adbms2950_usleep(adbms2950_driver_t* dev, uint16_t microseconds);
 void adbms2950_spi_write(adbms2950_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs);
 void adbms2950_spi_write_read(adbms2950_driver_t *dev, uint8_t* tx_Data, uint8_t tx_len, uint8_t* rx_data, uint8_t rx_len, uint8_t use_cs);
 
@@ -175,10 +174,8 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	adbms2950_set_cs(dev, 1);
 
 	adbms2950_wakeup(dev);
-
 	adbms2950_srst(dev);
-
-	adbms2950_usleep(dev, 8000); // 8ms delay
+	adbms2950_us_delay(dev, 8000); // 8ms delay
 
 	adbms2950_reset_cfg_regs(dev);
 	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
@@ -192,6 +189,7 @@ void adbms2950_init(adbms2950_driver_t *dev,
 		dev->ics[cic].tx_cfga.gpo2c = PULLED_DOWN;
 	}
 
+	adbms2950_wakeup(dev);
 	adbms2950_wrcfga(dev);
 	adbms2950_wrcfgb(dev);
 	// TODO: add delay?
@@ -203,7 +201,13 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	adi1_ adi1;
 	adi1.rd = RD_ON;
 	adi1.opt = OPT12_C;
+	adbms2950_wakeup(dev);
 	adbms2950_adi1(dev, &adi1);
+
+	adi2_ adi2;
+	adi2.opt = OPT12_C;
+	adbms2950_wakeup(dev);
+	adbms2950_adi2(dev, &adi2);
 
 	// TODO: when calling ADV use in Accumulator driver
 	// Use OW off: OW_OFF
@@ -228,7 +232,8 @@ void adbms2950_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_dat
 	uint16_t pec10;
 	uint16_t tx_sz = CMDSZ + PEC15SZ + ((TX_DATA + DPECSZ) * dev->num_ics);
 	uint16_t cmd_index;
-	uint8_t src_addr;
+	uint8_t src_addr = 0;
+	uint8_t temp[TX_DATA];
 
 	wrbuf[0] = cmd[0];
 	wrbuf[1] = cmd[1];
@@ -237,18 +242,25 @@ void adbms2950_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_dat
 	wrbuf[3] = (uint8_t)pec15;
 	cmd_index = 4;
 
-	for(uint8_t ic = dev->num_ics; ic < dev->num_ics; ic--)
-	{
-		src_addr = cmd_index;
-		for (uint8_t current_byte = 0; current_byte < TX_DATA; current_byte++)
-		{
-			wrbuf[cmd_index] = tx_data[((ic - 1) * TX_DATA) + current_byte];
-			cmd_index++;
-		}
-		pec10 = pec10_calc_modular(&wrbuf[src_addr], PEC10_WRITE);
-		wrbuf[cmd_index++] = (uint8_t)(pec10 >> 8);
-		wrbuf[cmd_index++] = (uint8_t)pec10;
-	}
+    for (uint8_t current_ic = dev->num_ics; current_ic > 0; current_ic--)
+    {
+      src_addr = ((current_ic-1) * TX_DATA);
+      /*!< The first configuration written is received by the last IC in the daisy chain */
+      for (uint8_t current_byte = 0; current_byte < TX_DATA; current_byte++)
+      {
+        wrbuf[cmd_index] = tx_data[((current_ic-1)*6)+current_byte];
+        cmd_index = cmd_index + 1;
+      }
+      /*!< Copy each ic correspond data + pec value for calculate data pec */
+      memcpy(temp, &tx_data[src_addr], TX_DATA); /*!< dst, src, size */
+      /*!< calculating the PEC for each Ics configuration register data */
+      pec10 = (uint16_t)pec10_calc_modular(temp, PEC10_WRITE);
+      // data_pec = (uint16_t)pec10_calc(true,BYTES_IN_REG, &copyArray[0]);
+      wrbuf[cmd_index] = (uint8_t)(pec10 >> 8);
+      cmd_index = cmd_index + 1;
+      wrbuf[cmd_index] = (uint8_t)pec10;
+      cmd_index = cmd_index + 1;
+    }
 
 	adbms2950_spi_write(dev, wrbuf, tx_sz, 1);
 }
@@ -258,8 +270,9 @@ void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_dat
 	uint16_t pec15;
 	uint16_t rx_sz = reg_size * dev->num_ics;
 	uint8_t wrcmd[CMDSZ + PEC15SZ] = {0};
-	uint8_t src_address;
+	uint8_t src_addr = 0;
 	uint16_t received_pec, calculated_pec;
+	uint8_t temp[RX_DATA]; // should technically be reg_size but this is the rd48 and is only used for this size transmission
 
 	wrcmd[0] = cmd[0];
 	wrcmd[1] = cmd[1];
@@ -269,16 +282,20 @@ void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_dat
 
 	adbms2950_spi_write_read(dev, wrcmd, CMDSZ + PEC15SZ, rx_data, rx_sz, 1);
 
-    for (uint8_t current_ic = 0; current_ic < dev->num_ics; current_ic++)
+    for (uint8_t current_ic = 0; current_ic < dev->num_ics; current_ic++)     /*!< executes for each ic in the daisy chain and packs the data */
     {
-      /*!< Get command counter value */
-      dev->ics[current_ic].rx_cmd_cntr = (rx_data[(current_ic * rx_sz) + (rx_sz - 2)] >> 2);
+      for (uint8_t current_byte = 0; current_byte < (reg_size); current_byte++)
+      {
+        rx_data[(current_ic * reg_size) + current_byte] = rx_data[current_byte + (current_ic * reg_size)];
+      }
       /*!< Get received pec value from ic*/
-      received_pec = (uint16_t)(((rx_data[(current_ic * rx_sz) + (rx_sz - 2)] & 0x03) << 8) | rx_data[(current_ic * rx_sz) + (rx_sz - 1)]);
-      src_address = (current_ic * (reg_size));
+      received_pec = (uint16_t)(((rx_data[(current_ic * reg_size) + (reg_size - 2)] & 0x03) << 8) | rx_data[(current_ic * reg_size) + (reg_size - 1)]);
+      /*!< Copy each ic correspond data + pec value for calculate data pec */
+      memcpy(temp, &rx_data[src_addr], RX_DATA);
+      src_addr = ((current_ic+1) * (reg_size));
       /*!< Calculate data pec */
-      calculated_pec = (uint16_t)pec10_calc(1, (rx_sz - DPECSZ), &rx_data[src_address]);
-      /*!< Match received pec with calculated pec */
+      calculated_pec = (uint16_t)pec10_calc(1, (reg_size - DPECSZ), temp);
+
       dev->ics[current_ic].rx_pec_error = (received_pec != calculated_pec);
     }
 }
@@ -678,9 +695,9 @@ void adbms2950_wakeup(adbms2950_driver_t *dev)
 	for(uint8_t i = 0; i < dev->num_ics; i++)
 	{
 		adbms2950_set_cs(dev, 0);
-		adbms2950_usleep(dev, WAKEUP_US_DELAY);
+		adbms2950_us_delay(dev, WAKEUP_US_DELAY);
 		adbms2950_set_cs(dev, 1);
-		adbms2950_usleep(dev, WAKEUP_BW_DELAY);
+		adbms2950_us_delay(dev, WAKEUP_BW_DELAY);
 	}
 }
 
@@ -689,7 +706,7 @@ void adbms2950_set_cs(adbms2950_driver_t* dev, uint8_t state)
 	HAL_GPIO_WritePin(dev->cs_port[dev->string], dev->cs_pin[dev->string], state);
 }
 
-void adbms2950_usleep(adbms2950_driver_t* dev, uint16_t microseconds)
+void adbms2950_us_delay(adbms2950_driver_t* dev, uint16_t microseconds)
 {
 	__HAL_TIM_SET_COUNTER(dev->htim, 0);
 	while (__HAL_TIM_GET_COUNTER(dev->htim) < microseconds);
