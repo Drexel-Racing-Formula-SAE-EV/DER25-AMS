@@ -30,22 +30,29 @@ void accumulator_init(accumulator_t *dev,
 int accumulator_read_volt(accumulator_t *dev)
 {
 	int ret = 0;
+
+	/* APM */
+	// Set GPO to enabled to read VBAT voltage
 	adbms2950_gpo_set(&dev->apm, HVEN1, GPO_SET);
 	adbms2950_gpo_set(&dev->apm, HVEN2, GPO_SET);
 	adbms2950_wakeup(&dev->apm);
 	adbms2950_wrcfga(&dev->apm);
 	adbms2950_rdcfga(&dev->apm);
 
-	adbms2950_us_delay(&dev->apm, 500);
+	// Read VBxADC results (ADCs are in continuous mode)
 	adbms2950_wakeup(&dev->apm);
 	adbms2950_rdvb(&dev->apm);
-	adbms2950_rdi(&dev->apm);
-
-	dev->apm.vbat_adc[0] = dev->apm_ics[0].vbat.vbat1 * VBAT_SCALE;
-	dev->apm.vbat_adc[1] = dev->apm_ics[0].vbat.vbat2 * VBAT_SCALE;
-
+	dev->apm.vbat_adc[0] = (int16_t)(dev->apm_ics[0].vbat.vbat1) * VBAT1_SCALE;
+	dev->apm.vbat_adc[1] = (int16_t)(dev->apm_ics[0].vbat.vbat2) * VBAT2_SCALE;
 	dev->apm.vbat[0] = dev->apm.vbat_adc[0] * VBAT_DIV_SCALE;
 	dev->apm.vbat[1] = dev->apm.vbat_adc[1] * VBAT_DIV_SCALE;
+
+	// Read VxADC results (ADCs are in continuous mode)
+	adbms2950_wakeup(&dev->apm);
+	adbms2950_rdi(&dev->apm);
+	dev->apm.vi_adc[0] = (int32_t)(dev->apm_ics[0].i.i1) * VI1_SCALE;
+	dev->apm.vi_adc[1] = (int32_t)(dev->apm_ics[0].i.i2) * VI2_SCALE;
+	// TODO: calibrate NTCs on APM and set 'dev->apm.current[]' values
 
     return ret;
 }
@@ -53,6 +60,25 @@ int accumulator_read_volt(accumulator_t *dev)
 int accumulator_read_temp(accumulator_t *dev)
 {
 	int error = 0;
+
+	adv_ adv;
+	adv.ow = OW_OFF;
+	adv.ch = SM_V7_V9;
+	// Start aux ADC
+	adbms2950_wakeup(&dev->apm);
+	adbms2950_adv(&dev->apm, &adv);
+
+	// Poll aux ADC
+	adbms2950_wakeup(&dev->apm);
+	adbms2950_plv(&dev->apm);
+
+	// Read aux ADC
+	adbms2950_wakeup(&dev->apm);
+	adbms2950_rdv1d(&dev->apm);
+
+	dev->apm.vtemp_adc[0] = dev->apm_ics[0].vr.v_codes[9]; // V7A
+	dev->apm.vtemp_adc[1] = dev->apm_ics[0].vr.v_codes[11]; // V9B
+
 	return error;
 }
 

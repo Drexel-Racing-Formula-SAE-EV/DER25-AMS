@@ -208,10 +208,6 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	adi2.opt = OPT12_C;
 	adbms2950_wakeup(dev);
 	adbms2950_adi2(dev, &adi2);
-
-	// TODO: when calling ADV use in Accumulator driver
-	// Use OW off: OW_OFF
-	// Use VCH: SM_V7_V9
 }
 
 void adbms2950_cmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
@@ -635,8 +631,11 @@ void adbms2950_parse_rdi(adbms2950_driver_t* dev, uint8_t* i_data)
 	  {
 		  address = cic * RX_DATA;
 	    memcpy(&dev->ics[cic].reg.rx_data[0], &i_data[address], RX_DATA);
-	    dev->ics[cic].i.i1 = dev->ics[cic].reg.rx_data[0] + (dev->ics[cic].reg.rx_data[1] << 8) + (dev->ics[cic].reg.rx_data[2] << 16);
-	    dev->ics[cic].i.i2 = dev->ics[cic].reg.rx_data[3] + (dev->ics[cic].reg.rx_data[4] << 8) + (dev->ics[cic].reg.rx_data[5] << 16);
+	    dev->ics[cic].i.i1 = (uint32_t)0 + dev->ics[cic].reg.rx_data[0] + (dev->ics[cic].reg.rx_data[1] << 8) + (dev->ics[cic].reg.rx_data[2] << 16);
+	    dev->ics[cic].i.i2 = (uint32_t)0 + dev->ics[cic].reg.rx_data[3] + (dev->ics[cic].reg.rx_data[4] << 8) + (dev->ics[cic].reg.rx_data[5] << 16);
+	    // Sign extend signed 24 bit value to int32_t
+	    if(dev->ics[cic].i.i1 & 0x800000) dev->ics[cic].i.i1 |= 0xFF000000;
+	    if(dev->ics[cic].i.i2 & 0x800000) dev->ics[cic].i.i2 |= 0xFF000000;
 	  }
 }
 

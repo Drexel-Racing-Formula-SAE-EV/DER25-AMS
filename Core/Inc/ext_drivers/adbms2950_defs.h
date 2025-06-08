@@ -12,8 +12,12 @@
 
 #define NVBATS 2 // Number of VBat ADC values
 #define NVIS 2 // Number of Current ADC values
+#define NAPMTEMPS 2 // Number of temp sensors on the APM
 
-#define VBAT_SCALE 0.0001f
+#define VBAT1_SCALE 0.0001f // Every ADC count is 100uV
+#define VBAT2_SCALE -0.000085f // Every ADC count is 85uV but gain is inverted (negative)
+#define VI1_SCALE 0.000001f // Every ADC count is 1uV
+#define VI2_SCALE -0.000001f // Every ADC count is 1uV but gain is inverted (negative)
 #define VBAT_DIV_SCALE (3622.0f / 22.0f) // 3.622MR / 22kR
 
 #define VR_SIZE 12              /*!< Bms ic number of Voltage Resister  */

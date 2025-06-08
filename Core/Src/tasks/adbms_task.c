@@ -27,7 +27,7 @@ void adbms_task_fn(void *argument)
         entry = osKernelGetTickCount();
 
         accumulator_read_volt(acc);
-        //adbms2950_wakeup(&acc->apm);
+        data->total_voltage = acc->apm.vbat[0];
 
         osDelayUntil(entry + (1000 / ADBMS_FREQ));
 	}

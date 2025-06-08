@@ -76,8 +76,11 @@ typedef struct
 {
 	float vbat[NVBATS]; // Actual battery voltage
 	float current[NVBATS]; // Actual current value
+	float temps[NAPMTEMPS]; // Current sensor NTC temps
+
 	float vbat_adc[NVBATS]; // VBAT ADC voltage
 	float vi_adc[NVIS]; // VI ADC voltage
+	float vtemp_adc[NAPMTEMPS];
   uint8_t num_ics;
   adbms2950_asic *ics;
   loop_manager_t loop_manager;
