@@ -63,8 +63,8 @@ int accumulator_read_temp(accumulator_t *dev)
 	int error = 0;
 
 	adv_ adv;
-	adv.ow = OW_OFF;
-	adv.ch = SM_V7_V9;
+	adv.ow = OW_OFF; // Open wire detection disabled
+	adv.ch = SM_V7_V9; // Single measurement, V7 and V9
 	// Start aux ADC
 	adbms2950_wakeup(&dev->apm);
 	adbms2950_adv(&dev->apm, &adv);

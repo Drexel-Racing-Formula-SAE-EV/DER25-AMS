@@ -199,11 +199,12 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	// Using Redundant, Continuous measurement
 	// See Table 42 page 34
 	adi1_ adi1;
-	adi1.rd = RD_ON;
-	adi1.opt = OPT12_C;
+	adi1.rd = RD_ON; // Redundant measurement on, starts VB2ADC and I2ADC as well
+	adi1.opt = OPT12_C; // Continuous measurement
 	adbms2950_wakeup(dev);
 	adbms2950_adi1(dev, &adi1);
 
+	// May not need this call since RD_ON should start VB2ADC and I2ADC above
 	adi2_ adi2;
 	adi2.opt = OPT12_C;
 	adbms2950_wakeup(dev);
