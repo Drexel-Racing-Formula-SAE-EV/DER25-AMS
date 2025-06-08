@@ -52,7 +52,8 @@ int accumulator_read_volt(accumulator_t *dev)
 	adbms2950_rdi(&dev->apm);
 	dev->apm.vi_adc[0] = (int32_t)(dev->apm_ics[0].i.i1) * VI1_SCALE;
 	dev->apm.vi_adc[1] = (int32_t)(dev->apm_ics[0].i.i2) * VI2_SCALE;
-	// TODO: calibrate NTCs on APM and set 'dev->apm.current[]' values
+	dev->apm.current[0] = dev->apm.vi_adc[0] * CURRENT_R_SCALE;
+	dev->apm.current[1] = dev->apm.vi_adc[1] * CURRENT_R_SCALE; // TODO: Check if this is right sign
 
     return ret;
 }
@@ -76,8 +77,11 @@ int accumulator_read_temp(accumulator_t *dev)
 	adbms2950_wakeup(&dev->apm);
 	adbms2950_rdv1d(&dev->apm);
 
-	dev->apm.vtemp_adc[0] = dev->apm_ics[0].vr.v_codes[9]; // V7A
-	dev->apm.vtemp_adc[1] = dev->apm_ics[0].vr.v_codes[11]; // V9B
+	dev->apm.vtemp_adc[0] = (int16_t)(dev->apm_ics[0].vr.v_codes[9]) * VxA_SCALE; // V7A
+	dev->apm.vtemp_adc[1] = (int16_t)(dev->apm_ics[0].vr.v_codes[11]) * VxB_SCALE; // V9B
+	// TODO: calibrate NTCs on APM and set 'dev->apm.temps[]' values. this just copies the voltage for now
+	dev->apm.temps[0] = dev->apm.vtemp_adc[0];
+	dev->apm.temps[1] = dev->apm.vtemp_adc[1];
 
 	return error;
 }

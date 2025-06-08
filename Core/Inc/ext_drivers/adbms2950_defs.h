@@ -14,11 +14,15 @@
 #define NVIS 2 // Number of Current ADC values
 #define NAPMTEMPS 2 // Number of temp sensors on the APM
 
-#define VBAT1_SCALE 0.0001f // Every ADC count is 100uV
-#define VBAT2_SCALE -0.000085f // Every ADC count is 85uV but gain is inverted (negative)
-#define VI1_SCALE 0.000001f // Every ADC count is 1uV
-#define VI2_SCALE -0.000001f // Every ADC count is 1uV but gain is inverted (negative)
+#define VBAT1_SCALE 0.0001f // 100uV resolution
+#define VBAT2_SCALE -0.000085f // 85uV resolution but gain is inverted (negative)
+#define VI1_SCALE 0.000001f // 1uV resolution
+#define VI2_SCALE -0.000001f // 1uV resolution but gain is inverted (negative)
+#define VxA_SCALE 0.0001f // 100uV resolution
+#define VxB_SCALE -0.000085 // 85uV resolution but gain is inverted (negative)
+
 #define VBAT_DIV_SCALE (3622.0f / 22.0f) // 3.622MR / 22kR
+#define CURRENT_R_SCALE 10000.0f // 1 / 100uR
 
 #define VR_SIZE 12              /*!< Bms ic number of Voltage Resister  */
 #define RVR_SIZE 13             /* Bms ic number of Redundant Voltage Resister  */

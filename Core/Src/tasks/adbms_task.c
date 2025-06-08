@@ -29,6 +29,8 @@ void adbms_task_fn(void *argument)
         accumulator_read_volt(acc);
         data->total_voltage = acc->apm.vbat[0];
 
+        accumulator_read_temp(acc);
+
         osDelayUntil(entry + (1000 / ADBMS_FREQ));
 	}
 }
