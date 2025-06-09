@@ -27,7 +27,7 @@ void adbms_task_fn(void *argument)
         entry = osKernelGetTickCount();
 
         accumulator_read_volt(acc);
-        data->total_voltage = acc->apm.vbat[0];
+        data->total_voltage = (acc->apm.vbat[0] + acc->apm.vbat[1]) / 2.0f;
 
         accumulator_read_temp(acc);
 
