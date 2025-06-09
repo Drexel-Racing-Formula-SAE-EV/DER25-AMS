@@ -328,9 +328,9 @@ void adbms6830_create_clr_flag_data(adbms6830_driver_t* dev)
 
 void adbms6830_spi_write(adbms6830_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs)
 {
-	if(use_cs) HAL_GPIO_WritePin(dev->cs_port_a, dev->cs_pin_a, 0);
+	if(use_cs) adbms6830_set_cs(dev, 0);
 	HAL_SPI_Transmit(dev->hspia, data, len, SPI_TIMEOUT);
-	if(use_cs) HAL_GPIO_WritePin(dev->cs_port_a, dev->cs_pin_a, 1);
+	if(use_cs) adbms6830_set_cs(dev, 1);
 }
 
 void adbms6830_cmd(adbms6830_driver_t* dev, uint8_t cmd[ADBMS6830_CMD_SIZE])
@@ -409,13 +409,31 @@ void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_d
 
 
 // Tx/Rx Utility
-void adbms6830_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data);
-void adbms6830_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data);
+void adbms6830_wr48(adbms6830_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data)
+{
+
+}
+
+
+void adbms6830_rd48(adbms6830_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data)
+{
+
+}
 
 // SPI communication
-void adbms6830_set_cs(adbms2950_driver_t* dev, uint8_t state);
-void adbms6830_spi_write(adbms2950_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs);
-void adbms6830_spi_write_read(adbms2950_driver_t *dev, uint8_t* tx_Data, uint8_t tx_len, uint8_t* rx_data, uint8_t rx_len, uint8_t use_cs);
+void adbms6830_set_cs(adbms6830_driver_t* dev, uint8_t state)
+{
+	HAL_GPIO_WritePin(dev->cs_port[dev->string], dev->cs_pin[dev->string], state);
+}
 
+void adbms6830_spi_write(adbms6830_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs)
+{
+
+}
+
+void adbms6830_spi_write_read(adbms6830_driver_t *dev, uint8_t* tx_Data, uint8_t tx_len, uint8_t* rx_data, uint8_t rx_len, uint8_t use_cs)
+{
+
+}
 
 
