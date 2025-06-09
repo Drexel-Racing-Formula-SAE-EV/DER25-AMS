@@ -8,7 +8,21 @@
 #ifndef INC_EXT_DRIVERS_ADBMS2950_DEFS_H_
 #define INC_EXT_DRIVERS_ADBMS2950_DEFS_H_
 
-#include "stm32f7xx_hal.h"
+#include <stdint.h>
+
+#define NVBATS 2 // Number of VBat ADC values
+#define NVIS 2 // Number of Current ADC values
+#define NAPMTEMPS 2 // Number of temp sensors on the APM
+
+#define VBAT1_SCALE 0.0001f // 100uV resolution
+#define VBAT2_SCALE -0.000085f // 85uV resolution but gain is inverted (negative)
+#define VI1_SCALE 0.000001f // 1uV resolution
+#define VI2_SCALE -0.000001f // 1uV resolution but gain is inverted (negative)
+#define VxA_SCALE 0.0001f // 100uV resolution
+#define VxB_SCALE -0.000085 // 85uV resolution but gain is inverted (negative)
+
+#define VBAT_DIV_SCALE (3622.0f / 22.0f) // 3.622MR / 22kR
+#define CURRENT_R_SCALE 10000.0f // 1 / 100uR
 
 #define VR_SIZE 12              /*!< Bms ic number of Voltage Resister  */
 #define RVR_SIZE 13             /* Bms ic number of Redundant Voltage Resister  */
@@ -30,7 +44,8 @@
 #define ALLREDVR_SIZE  22       /* ALL Redundant Voltage Reg. byte size*/
 
 #define WAKEUP_US_DELAY 250
-#define SPI_TIMEOUT 100
+#define WAKEUP_BW_DELAY 10
+#define SPI_TIMEOUT 500
 #define BUFSZ 512
 
 /*!
@@ -956,64 +971,6 @@ typedef struct
   uint8_t tmodchk;
 } diag_test_;
 
-/*!< ADBMS2950 IC main structure */
-typedef struct
-{
-  cfa_ tx_cfga;
-  cfa_ rx_cfga;
-  cfb_ tx_cfgb;
-  cfb_ rx_cfgb;
-  flag_ flag;
-  flag_ clflag;
-  crg_ i;
-  iacc_ iacc;
-  vbat_ vbat;
-  vbacc_ vbacc;
-  i_vbat_ ivbat;
-  i_vbacc_ i_vbacc;
-  vr_  vr;
-  rvr_ rvr;
-  oc_ oc;
-  auxa_ auxa;
-  auxb_ auxb;
-  auxc_ auxc;
-  rdalli_ rdalli;
-  rdalla_ rdalla;
-  rdallc_ rdallc;
-  rdallv_ rdallv;
-  rdallr_ rdallr;
-  rdallx_ rdallx;
-  state_ state;
-  com_ tx_comm;
-  com_ rx_comm;
-  sid_ sid;
-  ic_register_ configa;
-  ic_register_ configb;
-  ic_register_ clrflag;
-  ic_register_ reg;
-  ic_register_ axa;
-  ic_register_ axb;
-  ic_register_ axc;
-  ic_register_ flg;
-  ic_register_ ste;
-  ic_register_ rdlli;
-  ic_register_ rdlla;
-  ic_register_ rdllc;
-  ic_register_ rdllv;
-  ic_register_ rdllr;
-  ic_register_ rdllx;
-  ic_register_ com;
-  ic_register_ rsid;
-  cmdcnt_pec_ cccrc;
-  uint32_t pladc_count;
-  uint32_t OCTicks;
-  uint32_t cal_count;
-  tm48_ tm48;
-  uint8_t Result;
-  uint8_t ResultLoc;
-  uint8_t OC_PWM_Result;
-} adbms2950_asic;
-
 /* hold loop manager variables */
 typedef struct
 {
@@ -1043,21 +1000,6 @@ typedef enum
 	STRING_A = 0,
 	STRING_B
 } adbms2950_string;
-
-/* adbms2950 main driver */
-typedef struct
-{
-  uint8_t num_ics;
-  adbms2950_asic *ics;
-  loop_manager_t loop_manager;
-  pladc_manager_t pladc_manager;
-  adc_configuration_t config;
-	SPI_HandleTypeDef *hspi;
-	GPIO_TypeDef *cs_port[2];
-	uint16_t cs_pin[2];
-	adbms2950_string string;
-	TIM_HandleTypeDef *htim;
-} adbms2950_driver_t;
 
 /* ADI1 command parameters structure */
 typedef struct
