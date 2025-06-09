@@ -175,7 +175,8 @@ void adbms2950_init(adbms2950_driver_t *dev,
 
 	adbms2950_wakeup(dev);
 	adbms2950_srst(dev);
-	adbms2950_us_delay(dev, 8000); // 8ms delay
+	// 8ms delay. DS and vendor code recommend
+	adbms2950_us_delay(dev, 8000);
 
 	adbms2950_reset_cfg_regs(dev);
 	for(uint8_t cic = 0; cic < dev->num_ics; cic++)
@@ -192,7 +193,6 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	adbms2950_wakeup(dev);
 	adbms2950_wrcfga(dev);
 	adbms2950_wrcfgb(dev);
-	// TODO: add delay?
 	adbms2950_rdcfga(dev);
 	adbms2950_rdcfgb(dev);
 
@@ -204,11 +204,12 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	adbms2950_wakeup(dev);
 	adbms2950_adi1(dev, &adi1);
 
-	// May not need this call since RD_ON should start VB2ADC and I2ADC above
-	adi2_ adi2;
+	// Don't need this call since RD_ON starts VB2ADC and I2ADC above
+	/*adi2_ adi2;
 	adi2.opt = OPT12_C;
 	adbms2950_wakeup(dev);
 	adbms2950_adi2(dev, &adi2);
+	*/
 }
 
 void adbms2950_cmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
