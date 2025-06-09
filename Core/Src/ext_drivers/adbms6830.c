@@ -5,10 +5,8 @@
  *      Author: realb
  */
 
-#include <stdint.h>
 #include <string.h>
 
-#include "ext_drivers/adbms6830_data.h"
 #include "ext_drivers/adbms6830_functions.h"
 
 unsigned char shared_buf[BUFSZ] = {0};
@@ -164,18 +162,6 @@ void adbms6830_rd48(adbms6830_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_dat
 void adbms6830_set_cs(adbms6830_driver_t* dev, uint8_t state);
 void adbms6830_spi_write(adbms6830_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs);
 void adbms6830_spi_write_read(adbms6830_driver_t *dev, uint8_t* tx_Data, uint8_t tx_len, uint8_t* rx_data, uint8_t rx_len, uint8_t use_cs);
-
-static uint16_t Pec15_Calc(uint8_t len, uint8_t *data)
-{
-  uint16_t remainder, addr;
-  remainder = 16u; /*!< initialize the PEC */
-  for (uint8_t i = 0; i<len; i++) /*!< loops for each byte in data array */
-  {
-    addr = (((remainder>>7u)^data[i])&0xff);/*!< calculate PEC table address */
-    remainder = ((remainder<<8u)^Crc15Table[addr]);
-  }
-  return(remainder*2u);/*!< The CRC15 has a 0 in the LSB so the remainder must be multiplied by 2 */
-}
 
 // Tx/Rx Utility
 void adbms6830_cmd(adbms6830_driver_t* dev, uint8_t cmd[CMDSZ]);
