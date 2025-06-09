@@ -177,23 +177,23 @@ void adBms6830_init_config(adbms6830_driver_t* dev,
 
 	for(uint8_t i = 0; i < dev->num_ics; i++)
 	{
-	/* Setup cell_asic */
-	/* Init config A */
-	dev->ics[i].tx_cfga.refon = PWR_UP;
-	dev->ics[i].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
+		/* Setup cell_asic */
+		/* Init config A */
+		dev->ics[i].tx_cfga.refon = PWR_UP;
+		dev->ics[i].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
 
-	/* Init config B */
-	over_voltage = (over_voltage - 1.5);
-	over_voltage = over_voltage / (16 * 0.000150);
-	vov_value = (uint16_t )(over_voltage + 2 * (1 << (rbits - 1)));
-	vov_value &= 0xFFF;
-	dev->ics[i].tx_cfgb.vov = vov_value;
+		/* Init config B */
+		over_voltage = (over_voltage - 1.5);
+		over_voltage = over_voltage / (16 * 0.000150);
+		vov_value = (uint16_t )(over_voltage + 2 * (1 << (rbits - 1)));
+		vov_value &= 0xFFF;
+		dev->ics[i].tx_cfgb.vov = vov_value;
 
-	under_voltage = (under_voltage - 1.5);
-	under_voltage = under_voltage / (16 * 0.000150);
-	vuv_value = (uint16_t )(under_voltage + 2 * (1 << (rbits - 1)));
-	vuv_value &= 0xFFF;
-	dev->ics[i].tx_cfgb.vuv = vuv_value;
+		under_voltage = (under_voltage - 1.5);
+		under_voltage = under_voltage / (16 * 0.000150);
+		vuv_value = (uint16_t )(under_voltage + 2 * (1 << (rbits - 1)));
+		vuv_value &= 0xFFF;
+		dev->ics[i].tx_cfgb.vuv = vuv_value;
 	}
 
 	wakeup_ics(dev);
@@ -333,7 +333,7 @@ void adbms6830_spi_write(adbms6830_driver_t* dev, uint8_t* data, uint16_t len, u
 	if(use_cs) HAL_GPIO_WritePin(dev->cs_port_a, dev->cs_pin_a, 1);
 }
 
-void adbms6830_write_cmd(adbms6830_driver_t* dev, uint8_t cmd[ADBMS6830_CMD_SIZE])
+void adbms6830_cmd(adbms6830_driver_t* dev, uint8_t cmd[ADBMS6830_CMD_SIZE])
 {
 	uint16_t pec15;
 
@@ -344,6 +344,8 @@ void adbms6830_write_cmd(adbms6830_driver_t* dev, uint8_t cmd[ADBMS6830_CMD_SIZE
 	write_buf[3] = (uint8_t)(pec15);
 	adbms6830_spi_write(dev, write_buf, ADBMS6830_CMD_SIZE + PEC15_SIZE, 1);
 }
+
+
 
 
 void adBms6830_write_read_config(adbms6830_driver_t* dev)
@@ -401,9 +403,19 @@ void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_d
 	wrcmd[2] = (uint8_t)(pec15 >> 8);
 	wrcmd[3] = (uint8_t)pec15;
 
-	adbms2950_spi_write_read(dev, wrcmd, CMDSZ + PEC15SZ, buf, rx_sz, 1);
+	adbms6830_spi_write_read(dev, wrcmd, CMDSZ + PEC15SZ, buf, rx_sz, 1);
 }
 
+
+
+// Tx/Rx Utility
+void adbms6830_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data);
+void adbms6830_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data);
+
+// SPI communication
+void adbms6830_set_cs(adbms2950_driver_t* dev, uint8_t state);
+void adbms6830_spi_write(adbms2950_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs);
+void adbms6830_spi_write_read(adbms2950_driver_t *dev, uint8_t* tx_Data, uint8_t tx_len, uint8_t* rx_data, uint8_t rx_len, uint8_t use_cs);
 
 
 
