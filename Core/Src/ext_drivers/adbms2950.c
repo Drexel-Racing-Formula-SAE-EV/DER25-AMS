@@ -147,6 +147,11 @@ void adbms2950_parse_rdv1d(adbms2950_driver_t* dev, uint8_t* v_data);
 void adbms2950_pack_cfga(adbms2950_driver_t* dev);
 void adbms2950_pack_cfgb(adbms2950_driver_t* dev);
 
+// Data validation
+uint16_t Pec15_Calc(uint8_t len, uint8_t *data);
+uint16_t pec10_calc(uint8_t rx_cmd, int len, uint8_t *data);
+uint16_t pec10_calc_modular(uint8_t * data, uint8_t PEC_Format);
+uint16_t pec10_calc_int(uint16_t remainder, uint8_t bit);
 
 void adbms2950_init(adbms2950_driver_t *dev,
 					uint8_t num_asics,

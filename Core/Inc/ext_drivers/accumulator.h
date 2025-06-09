@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include "stm32f7xx_hal.h"
 #include "ext_drivers/adbms2950.h"
+#include "ext_drivers/adbms6830_data.h"
 
 /* SMB Macros */
 #define NSEGS 1
@@ -25,6 +26,8 @@
 #define HVEN1 GPO1
 #define HVEN2 GPO2
 
+#define NSMBS 1
+
 typedef struct
 {
 	float total_volt;
@@ -34,6 +37,9 @@ typedef struct
 
 	adbms2950_asic apm_ics[NAPMS];
 	adbms2950_driver_t apm;
+
+	adbms6830_asic smb_ics[NSMBS];
+	adbms6830_driver_t smb;
 } accumulator_t;
 
 void accumulator_init(accumulator_t *dev,

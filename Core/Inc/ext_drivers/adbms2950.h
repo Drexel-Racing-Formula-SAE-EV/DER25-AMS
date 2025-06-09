@@ -8,6 +8,7 @@
 #ifndef INC_EXT_DRIVERS_ADBMS2950_H_
 #define INC_EXT_DRIVERS_ADBMS2950_H_
 
+#include "ext_drivers/adbms_shared.h"
 #include "ext_drivers/adbms2950_defs.h"
 #include "stm32f7xx_hal.h"
 
@@ -83,13 +84,13 @@ typedef struct
 	float vtemp_adc[NAPMTEMPS];
   uint8_t num_ics;
   adbms2950_asic *ics;
-  loop_manager_t loop_manager;
+  loop_manager_2950_t loop_manager;
   pladc_manager_t pladc_manager;
   adc_configuration_t config;
 	SPI_HandleTypeDef *hspi;
 	GPIO_TypeDef *cs_port[2];
 	uint16_t cs_pin[2];
-	adbms2950_string string;
+	adbms_string string;
 	TIM_HandleTypeDef *htim;
 } adbms2950_driver_t;
 
@@ -128,11 +129,5 @@ void adbms2950_gpo_set(adbms2950_driver_t* dev, GPO gpo, CFGA_GPO state);
 void adbms2950_wakeup(adbms2950_driver_t *dev);
 // Utility
 void adbms2950_us_delay(adbms2950_driver_t* dev, uint16_t microseconds);
-
-// Data validation
-uint16_t Pec15_Calc(uint8_t len, uint8_t *data);
-uint16_t pec10_calc(uint8_t rx_cmd, int len, uint8_t *data);
-uint16_t pec10_calc_modular(uint8_t * data, uint8_t PEC_Format);
-uint16_t pec10_calc_int(uint16_t remainder, uint8_t bit);
 
 #endif /* INC_EXT_DRIVERS_ADBMS2950_H_ */
