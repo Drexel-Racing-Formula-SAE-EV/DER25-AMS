@@ -19,7 +19,7 @@
 #define VER_MINOR 1
 
 #define CLI_FREQ 20
-#define AIR_FREQ 10
+#define AIR_FREQ 2 // used to be 10
 #define CURRENT_FREQ 10
 #define LTC_FREQ 10
 #define IMD_FREQ 10

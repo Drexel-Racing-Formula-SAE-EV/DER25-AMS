@@ -85,30 +85,32 @@ void adBms6830_init_config(adbms6830_driver_t* dev,
 	}
 
 	wakeup_ics(dev);
-	adbms_write_data(dev, WRCFGA, Config, A);
-	adbms_write_data(dev, WRCFGB, Config, B);
+	adbms6830_write_data(dev, WRCFGA, Config, A);
+	adbms6830_write_data(dev, WRCFGB, Config, B);
 }
 
 void wakeup_ics(adbms6830_driver_t* dev)
 {
 	for(int i = 0; i < dev->num_ics; i++)
 	{
-		//TODO: should it be both SPIs?
 		HAL_GPIO_WritePin(dev->cs_port_a, dev->cs_pin_a, 0);
-		HAL_Delay(1);
+		HAL_Delay(CS_WAIT_TIME);
 		HAL_GPIO_WritePin(dev->cs_port_a, dev->cs_pin_a, 1);
-		HAL_Delay(1);
+		HAL_Delay(CS_WAIT_TIME);
 	}
 }
 
-void adbms_write_data(adbms6830_driver_t *dev, uint8_t cmd_arg[2], TYPE type, GRP group)
+void adbms6830_write_data(adbms6830_driver_t *dev, uint8_t cmd[ADBMS6830_CMD_SIZE], TYPE type, GRP group)
 {
+	uint8_t cmd_len = 4 + (RX_DATA * dev->num_ics);
+	uint8_t
+	uint16_t pec15, pec10;
 	adbms6830_asic *ics = dev->ics;
-	for(uint8_t i = 0; i < TX_DATA * dev->num_ics; i++)
-	{
-		shared_buf[i] = 0;
-	}
 
+	for(uint8_t i = 0; i < TX_DATA * dev->num_ics; i++) shared_buf[i] = 0;
+	for(uint8_t i = 0; i < 100; i++) write_buf[i] = 0;
+
+	// configure registers
 	switch(type)
 	{
 	case Config:
@@ -118,7 +120,7 @@ void adbms_write_data(adbms6830_driver_t *dev, uint8_t cmd_arg[2], TYPE type, GR
 			for (uint8_t data = 0; data < TX_DATA; data++)
 			{
 				if(group == A) shared_buf[(cic * TX_DATA) + data] = ics[cic].configa.tx_data[data];
-				else  shared_buf[(cic * TX_DATA) + data] = ics[cic].configb.tx_data[data];
+				else shared_buf[(cic * TX_DATA) + data] = ics[cic].configb.tx_data[data];
 		    }
 		}
 		break;
@@ -145,8 +147,13 @@ void adbms_write_data(adbms6830_driver_t *dev, uint8_t cmd_arg[2], TYPE type, GR
 		}
 		break;
 	}
+
 	wakeup_ics(dev);
-//	spi_write_data(tIC, cmd_arg, &write_buffer[0]);  //TODO: implement
+
+	// begin start of spi_write from Analog Devices library
+	write_buf[0] = cmd
+
+	adbms6830_spi_write(dev, &shared_buf, TX_DATA * dev->num_ics, 1);
 }
 
 void adbms6830_create_config(adbms6830_driver_t* dev, GRP group)
@@ -207,6 +214,84 @@ void adbms6830_create_clr_flag_data(adbms6830_driver_t* dev)
 	}
 }
 
+void adbms6830_spi_write(adbms6830_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs)
+{
+	if(use_cs) HAL_GPIO_WritePin(dev->cs_port_a, dev->cs_pin_a, 0);
+	HAL_SPI_Transmit(dev->hspia, data, len, SPI_TIMEOUT);
+	if(use_cs) HAL_GPIO_WritePin(dev->cs_port_a, dev->cs_pin_a, 1);
+}
+
+void adbms6830_write_cmd(adbms6830_driver_t* dev, uint8_t cmd[ADBMS6830_CMD_SIZE])
+{
+	uint16_t pec15;
+
+	write_buf[0] = cmd[0];
+	write_buf[1] = cmd[1];
+	pec15 = pec15_calc(ADBMS6830_CMD_SIZE, cmd);
+	write_buf[2] = (uint8_t)(pec15 >> 8);
+	write_buf[3] = (uint8_t)(pec15);
+	adbms6830_spi_write(dev, write_buf, ADBMS6830_CMD_SIZE + PEC15_SIZE, 1);
+}
+
+
+void adBms6830_write_read_config(adbms6830_driver_t* dev)
+{
+  adBmsWakeupIc(dev->num_ics);
+  adbms_write_data(dev, WRCFGA, Config, A);
+  adbms_write_data(dev, WRCFGB, Config, B);
+  adbms_read_data(dev, RDCFGA, Config, A);
+  adbms_read_data(dev, RDCFGB, Config, B);
+  printWriteConfig(dev, Config, ALL_GRP);
+  printReadConfig(dev, Config, ALL_GRP);
+}
+
+/* 2950 Code To Be Adapted */
+
+void adbms2950_wrdata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data)
+{
+	uint16_t pec15;
+	uint16_t pec10;
+	uint16_t tx_sz = CMDSZ + PEC15SZ + ((TX_DATA + DPECSZ) * dev->num_ics);
+	uint16_t cmd_index;
+	uint8_t src_addr;
+
+	wrbuf[0] = cmd[0];
+	wrbuf[1] = cmd[1];
+	pec15 = Pec15_Calc(CMDSZ, cmd);
+	wrbuf[2] = (uint8_t)(pec15 >> 8);
+	wrbuf[3] = (uint8_t)pec15;
+	cmd_index = 4;
+
+	for(uint8_t ic = dev->num_ics; ic < dev->num_ics; ic--)
+	{
+		src_addr = cmd_index;
+		for (uint8_t current_byte = 0; current_byte < TX_DATA; current_byte++)
+		{
+			wrbuf[cmd_index] = tx_data[((ic - 1) * TX_DATA) + current_byte];
+			cmd_index++;
+		}
+		pec10 = pec10_calc_modular(&wrbuf[src_addr], PEC10_WRITE);
+		wrbuf[cmd_index++] = (uint8_t)(pec10 >> 8);
+		wrbuf[cmd_index++] = (uint8_t)pec10;
+	}
+
+	adbms2950_spi_write(dev, wrbuf, tx_sz, 1);
+}
+
+void adbms2950_rddata(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t size)
+{
+	uint16_t pec15;
+	uint16_t rx_sz = size * dev->num_ics;
+	uint8_t wrcmd[CMDSZ + PEC15SZ] = {0};
+
+	wrcmd[0] = cmd[0];
+	wrcmd[1] = cmd[1];
+	pec15 = Pec15_Calc(CMDSZ, cmd);
+	wrcmd[2] = (uint8_t)(pec15 >> 8);
+	wrcmd[3] = (uint8_t)pec15;
+
+	adbms2950_spi_write_read(dev, wrcmd, CMDSZ + PEC15SZ, buf, rx_sz, 1);
+}
 
 
 
