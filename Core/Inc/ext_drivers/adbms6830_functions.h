@@ -29,12 +29,6 @@ void adbms6830_rdcfgb(adbms6830_driver_t *dev);
 
 void adbms6830_wakeup(adbms6830_driver_t* dev);
 
-void adbms6830_create_config(adbms6830_driver_t* dev, GRP group);
-
-void adbms6830_create_comm(adbms6830_driver_t* dev);
-
-void adbms6830_create_clr_flag_data(adbms6830_driver_t* dev);
-
 void adbms6830_us_delay(adbms6830_driver_t* dev, uint16_t microseconds);
 
 #endif /* INC_EXT_DRIVERS_ADBMS6830_FUNCTIONS_H_ */

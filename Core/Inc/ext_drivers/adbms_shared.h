@@ -54,6 +54,11 @@
 #define RDASALL_SIZE    70      /* RDASALL data byte size             */
 #define RDACSALL_SIZE   66      /* RDACSALL data byte size */
 
+uint16_t Pec15_Calc(uint8_t len, uint8_t *data);
+uint16_t pec10_calc(uint8_t rx_cmd, int len, uint8_t *data);
+uint16_t pec10_calc_int(uint16_t remainder, uint8_t bit);
+uint16_t pec10_calc_modular(uint8_t * data, uint8_t PEC_Format);
+
 /*!
 *  \enum Single & Round-Robin Measurement.
 * VCH: Single & Round-Robin Measurement Cmd bytes.
