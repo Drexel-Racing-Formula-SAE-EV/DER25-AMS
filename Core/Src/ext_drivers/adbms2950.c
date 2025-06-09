@@ -129,7 +129,7 @@ uint8_t TM_48[2]       = { 0x00, 0x0E };        // LION: RDSVE
 // Tx/Rx Utility
 void adbms2950_cmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ]);
 void adbms2950_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_data);
-void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size);
+void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data);
 
 // SPI communication
 void adbms2950_set_cs(adbms2950_driver_t* dev, uint8_t state);
@@ -210,6 +210,9 @@ void adbms2950_init(adbms2950_driver_t *dev,
 	adbms2950_wakeup(dev);
 	adbms2950_adi2(dev, &adi2);
 	*/
+
+	// Add delay for device to start
+	adbms2950_us_delay(dev, 8000);
 }
 
 void adbms2950_cmd(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ])
@@ -263,14 +266,14 @@ void adbms2950_wr48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* tx_dat
 	adbms2950_spi_write(dev, wrbuf, tx_sz, 1);
 }
 
-void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data, uint8_t reg_size)
+void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_data)
 {
 	uint16_t pec15;
-	uint16_t rx_sz = reg_size * dev->num_ics;
+	uint16_t rx_sz = RX_DATA * dev->num_ics;
 	uint8_t wrcmd[CMDSZ + PEC15SZ] = {0};
 	uint8_t src_addr = 0;
 	uint16_t received_pec, calculated_pec;
-	uint8_t temp[RX_DATA]; // should technically be reg_size but this is the rd48 and is only used for this size transmission
+	uint8_t temp[RX_DATA]; // should technically be RX_DATA but this is the rd48 and is only used for this size transmission
 
 	wrcmd[0] = cmd[0];
 	wrcmd[1] = cmd[1];
@@ -282,17 +285,17 @@ void adbms2950_rd48(adbms2950_driver_t* dev, uint8_t cmd[CMDSZ], uint8_t* rx_dat
 
     for (uint8_t current_ic = 0; current_ic < dev->num_ics; current_ic++)     /*!< executes for each ic in the daisy chain and packs the data */
     {
-      for (uint8_t current_byte = 0; current_byte < (reg_size); current_byte++)
+      for (uint8_t current_byte = 0; current_byte < (RX_DATA); current_byte++)
       {
-        rx_data[(current_ic * reg_size) + current_byte] = rx_data[current_byte + (current_ic * reg_size)];
+        rx_data[(current_ic * RX_DATA) + current_byte] = rx_data[current_byte + (current_ic * RX_DATA)];
       }
       /*!< Get received pec value from ic*/
-      received_pec = (uint16_t)(((rx_data[(current_ic * reg_size) + (reg_size - 2)] & 0x03) << 8) | rx_data[(current_ic * reg_size) + (reg_size - 1)]);
+      received_pec = (uint16_t)(((rx_data[(current_ic * RX_DATA) + (RX_DATA - 2)] & 0x03) << 8) | rx_data[(current_ic * RX_DATA) + (RX_DATA - 1)]);
       /*!< Copy each ic correspond data + pec value for calculate data pec */
       memcpy(temp, &rx_data[src_addr], RX_DATA);
-      src_addr = ((current_ic+1) * (reg_size));
+      src_addr = ((current_ic+1) * (RX_DATA));
       /*!< Calculate data pec */
-      calculated_pec = (uint16_t)pec10_calc(1, (reg_size - DPECSZ), temp);
+      calculated_pec = (uint16_t)pec10_calc(1, (RX_DATA - DPECSZ), temp);
 
       dev->ics[current_ic].rx_pec_error = (received_pec != calculated_pec);
     }
@@ -416,13 +419,13 @@ void adbms2950_wrcfgb(adbms2950_driver_t* dev)
 
 void adbms2950_rdcfga(adbms2950_driver_t* dev)
 {
-	adbms2950_rd48(dev, RDCFGA, buf, RX_DATA);
+	adbms2950_rd48(dev, RDCFGA, buf);
 	adbms2950_parse_cfga(dev, buf);
 }
 
 void adbms2950_rdcfgb(adbms2950_driver_t* dev)
 {
-	adbms2950_rd48(dev, RDCFGB, buf, RX_DATA);
+	adbms2950_rd48(dev, RDCFGB, buf);
 	adbms2950_parse_cfgb(dev, buf);
 }
 
@@ -604,7 +607,7 @@ void adbms2950_plv(adbms2950_driver_t* dev)
 
 void adbms2950_rdvb(adbms2950_driver_t* dev)
 {
-	adbms2950_rd48(dev, RDVB, buf, RX_DATA);
+	adbms2950_rd48(dev, RDVB, buf);
 	adbms2950_parse_rdvb(dev, buf);
 }
 
@@ -622,7 +625,7 @@ void adbms2950_parse_rdvb(adbms2950_driver_t* dev, uint8_t* vbat_data)
 
 void adbms2950_rdi(adbms2950_driver_t* dev)
 {
-	adbms2950_rd48(dev, RDI, buf, RX_DATA);
+	adbms2950_rd48(dev, RDI, buf);
 	adbms2950_parse_rdi(dev, buf);
 }
 
@@ -643,7 +646,7 @@ void adbms2950_parse_rdi(adbms2950_driver_t* dev, uint8_t* i_data)
 
 void adbms2950_rdv1d(adbms2950_driver_t* dev)
 {
-	adbms2950_rd48(dev, RDV1D, buf, RX_DATA);
+	adbms2950_rd48(dev, RDV1D, buf);
 	adbms2950_parse_rdv1d(dev, buf);
 }
 
@@ -717,7 +720,7 @@ void adbms2950_us_delay(adbms2950_driver_t* dev, uint16_t microseconds)
 void adbms2950_spi_write(adbms2950_driver_t* dev, uint8_t* data, uint16_t len, uint8_t use_cs)
 {
 	if(use_cs) adbms2950_set_cs(dev, 0);
-	HAL_StatusTypeDef ret = HAL_SPI_Transmit(dev->hspi, data, len, SPI_TIMEOUT);
+	HAL_SPI_Transmit(dev->hspi, data, len, SPI_TIMEOUT);
 	if(use_cs) adbms2950_set_cs(dev, 1);
 }
 
@@ -766,6 +769,7 @@ const uint16_t Crc15Table[256] =
 };
 
 /* Pre-computed CRC10 Table */
+/* UNUSED by my code. Don't know don't care
 static const uint16_t crc10Table[256] =
 {
 	0x000, 0x08f, 0x11e, 0x191, 0x23c, 0x2b3, 0x322, 0x3ad, 0x0f7, 0x078, 0x1e9, 0x166, 0x2cb, 0x244, 0x3d5, 0x35a,
@@ -785,6 +789,7 @@ static const uint16_t crc10Table[256] =
 	0x20a, 0x285, 0x314, 0x39b, 0x036, 0x0b9, 0x128, 0x1a7, 0x2fd, 0x272, 0x3e3, 0x36c, 0x0c1, 0x04e, 0x1df, 0x150,
 	0x3e4, 0x36b, 0x2fa, 0x275, 0x1d8, 0x157, 0x0c6, 0x049, 0x313, 0x39c, 0x20d, 0x282, 0x12f, 0x1a0, 0x031, 0x0be
 };
+*/
 
 uint16_t Pec15_Calc(uint8_t len, uint8_t *data)
 {

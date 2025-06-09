@@ -8,6 +8,9 @@
 #include "ext_drivers/accumulator.h"
 #include <math.h>
 
+void apm_read_vbadc_viadc(adbms2950_driver_t* apm);
+void apm_read_temps(adbms2950_driver_t* apm);
+
 void accumulator_init(accumulator_t *dev,
 				      SPI_HandleTypeDef *hspi,
 					  GPIO_TypeDef *cs_port_a,
@@ -94,16 +97,6 @@ void apm_read_temps(adbms2950_driver_t* apm)
 	// TODO: calibrate NTCs on APM and set 'dev->apm.temps[]' values. this just copies the voltage for now
 	apm->temps[0] = apm->vtemp_adc[0];
 	apm->temps[1] = apm->vtemp_adc[1];
-}
-
-int accumulator_convert_volt(accumulator_t *dev)
-{
-	return 0;
-}
-
-int accumulator_convert_temp(accumulator_t *dev, int channel)
-{
-	return 0;
 }
 
 int accumulator_stat_temp(accumulator_t *dev)

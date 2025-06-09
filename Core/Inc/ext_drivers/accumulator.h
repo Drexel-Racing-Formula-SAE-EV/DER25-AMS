@@ -46,8 +46,6 @@ void accumulator_init(accumulator_t *dev,
 					  );
 int accumulator_read_volt(accumulator_t *dev);
 int accumulator_read_temp(accumulator_t *dev);
-int accumulator_convert_volt(accumulator_t *dev);
-int accumulator_convert_temp(accumulator_t *dev, int channel);
 int accumulator_set_temp_ch(accumulator_t *dev, uint8_t channel);
 int accumulator_stat_temp(accumulator_t *dev);
 int accumulator_set_mux_ch(accumulator_t *dev, uint8_t channel, uint8_t addr7);
