@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include "stm32f7xx_hal.h"
 #include "ext_drivers/adbms2950.h"
-#include "ext_drivers/adbms6830_data.h"
+#include "ext_drivers/adbms6830_functions.h"
 
 /* SMB Macros */
 #define NSEGS 1
