@@ -26,6 +26,7 @@ void adbms6830_wrcfga(adbms6830_driver_t *dev);
 void adbms6830_wrcfgb(adbms6830_driver_t *dev);
 void adbms6830_rdcfga(adbms6830_driver_t *dev);
 void adbms6830_rdcfgb(adbms6830_driver_t *dev);
+void adbms6830_adcv(adbms6830_driver_t *dev, RD rd, CONT cont, DCP dcp, RSTF rstf, OW_C_S owcs);
 
 void adbms6830_wakeup(adbms6830_driver_t* dev);
 
