@@ -12,15 +12,15 @@ extern ADC_HandleTypeDef hadc2;
 
 extern CAN_HandleTypeDef hcan1;
 
-extern SPI_HandleTypeDef hspi1;
-extern SPI_HandleTypeDef hspi3;
+extern SPI_HandleTypeDef hspi6;
 
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim5;
 
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
 
 void stm32f767z_init(stm32f767z_t * dev)
 {
@@ -29,15 +29,15 @@ void stm32f767z_init(stm32f767z_t * dev)
 
 	dev->hcan1 = hcan1;
 
-	dev->hspi1 = hspi1;
-	dev->hspi3 = hspi3;
+	dev->hspi6 = hspi6;
 
 	dev->htim1 = htim1;
+	dev->htim2 = htim2;
 	dev->htim3 = htim3;
 	dev->htim4 = htim4;
 	dev->htim5 = htim5;
 
-	dev->huart2 = huart2;
+	dev->huart3 = huart3;
 }
 
 uint16_t stm32f767z_adc_read(ADC_HandleTypeDef *hadc)

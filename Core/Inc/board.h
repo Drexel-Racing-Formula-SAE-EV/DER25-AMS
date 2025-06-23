@@ -16,7 +16,7 @@
 #include "ext_drivers/current_sensor.h"
 #include "ext_drivers/accumulator.h"
 
-#define NFANS 10
+#define NFANS 6
 
 typedef struct
 {

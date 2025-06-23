@@ -22,8 +22,13 @@ void air_task_fn(void *argument)
 
 	for(;;)
 	{
+		// TODO: doesn't need to be its own task. can be in error task
 		entry = osKernelGetTickCount();
+
 		data->air_state = HAL_GPIO_ReadPin(AIR_CTRL_GPIO_Port, AIR_CTRL_Pin);
+		// TESTING, blink BMS OK
+		HAL_GPIO_TogglePin(BMS_OK_GPIO_Port, BMS_OK_Pin);
+
 		osDelayUntil(entry + (1000 / AIR_FREQ));
 	}
 }

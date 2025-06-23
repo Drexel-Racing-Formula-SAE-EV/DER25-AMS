@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "stm32f7xx_hal.h"
 #include "main.h"
 #include "board.h"
 #include "ext_drivers/accumulator.h"
@@ -19,9 +20,9 @@
 #define VER_MINOR 1
 
 #define CLI_FREQ 20
-#define AIR_FREQ 10
+#define AIR_FREQ 2 // used to be 10
 #define CURRENT_FREQ 10
-#define LTC_FREQ 10
+#define ADBMS_FREQ 1 // was 10, testing with 1
 #define IMD_FREQ 10
 #define FAN_FREQ 5
 #define CAN_FREQ 2
@@ -33,7 +34,7 @@
 #define CUR_PRIO  7
 #define FAN_PRIO  7
 #define IMD_PRIO  6
-#define LTC_PRIO  9
+#define ADBMS_PRIO  9
 
 #define ECU_CANBUS_ID 0x420
 
@@ -89,7 +90,7 @@ typedef struct
 	TaskHandle_t air_task;
 	TaskHandle_t imd_task;
 	TaskHandle_t current_task;
-	TaskHandle_t ltc_task;
+	TaskHandle_t adbms_task;
 } app_data_t;
 
 void app_create();
